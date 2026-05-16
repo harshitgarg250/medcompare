@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+model User {
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique
+  phone     String?
+  password  String
+  role      Role      @default(USER)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  bookings  Booking[]
+  reviews   Review[]
+}
+
+enum Role {
+  USER
+  ADMIN
+  HOSPITAL
+}
+
+model Hospital {
+  id          Int           @id @default(autoincrement())
+  name        String
+  type        String
+  address     String
+  city        String
+  lat         Float
+  lng         Float
+  phone       String?
+  email       String?
+  rating      Float         @default(0)
+  isVerified  Boolean       @default(false)
+  isOpen      Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  tests       TestPrice[]
+  slots       Slot[]
+  bookings    Booking[]
+  reviews     Review[]
+}
+
+model Test {
+  id          Int         @id @default(autoincrement())
+  name        String      @unique
+  description String?
+  category    String
+  createdAt   DateTime    @default(now())
+  prices      TestPrice[]
+  bookings    Booking[]
+}
+
+model TestPrice {
+  id         Int      @id @default(autoincrement())
+  price      Float
+  duration   String
+  reportTime String
+  hospital   Hospital @relation(fields: [hospitalId], references: [id])
+  hospitalId Int
+  test       Test     @relation(fields: [testId], references: [id])
+  testId     Int
+  createdAt  DateTime @default(now())
+
+  @@unique([hospitalId, testId])
+}
+
+model Slot {
+  id         Int        @id @default(autoincrement())
+  date       DateTime
+  time       String
+  isBooked   Boolean    @default(false)
+  hospital   Hospital   @relation(fields: [hospitalId], references: [id])
+  hospitalId Int
+  booking    Booking?
+  createdAt  DateTime   @default(now())
+}
+
+model Booking {
+  id         Int           @id @default(autoincrement())
+  status     BookingStatus @default(PENDING)
+  totalPrice Float
+  notes      String?
+  user       User          @relation(fields: [userId], references: [id])
+  userId     Int
+  hospital   Hospital      @relation(fields: [hospitalId], references: [id])
+  hospitalId Int
+  test       Test          @relation(fields: [testId], references: [id])
+  testId     Int
+  slot       Slot          @relation(fields: [slotId], references: [id])
+  slotId     Int           @unique
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model Review {
+  id         Int      @id @default(autoincrement())
+  rating     Int
+  comment    String?
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  hospital   Hospital @relation(fields: [hospitalId], references: [id])
+  hospitalId Int
+  createdAt  DateTime @default(now())
+}
