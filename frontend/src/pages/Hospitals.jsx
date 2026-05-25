@@ -53,7 +53,7 @@ function Hospitals() {
     ?.sort((a, b) => {
       if (activeFilter === 'Nearest') return a.distance - b.distance
       if (activeFilter === 'Top Rated') return b.rating - a.rating
-      if (activeFilter === 'Lowest Price') return (a.tests[0]?.price || 0) - (b.tests[0]?.price || 0)
+      if (activeFilter === 'Lowest Price') return (a.tests?.[0]?.price || 0) - (b.tests?.[0]?.price || 0)
       if (activeFilter === 'Open Now') return b.isOpen - a.isOpen
       return 0
     })

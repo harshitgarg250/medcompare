@@ -6,9 +6,13 @@ const createBooking = async (req, res) => {
     const { hospitalId, testId, slotId, totalPrice, notes } = req.body
     const userId = req.userId
 
+    console.log('Creating booking:', { hospitalId, testId, slotId, totalPrice, userId })
+
     const slot = await prisma.slot.findUnique({
       where: { id: parseInt(slotId) }
     })
+
+    console.log('Found slot:', slot)
 
     if (!slot) {
       return res.status(404).json({ message: 'Slot not found' })
@@ -40,10 +44,10 @@ const createBooking = async (req, res) => {
       booking
     })
   } catch (error) {
+    console.log('Booking error:', error.message)
     res.status(500).json({ message: 'Server error', error: error.message })
   }
 }
-
 // User ki saari bookings
 const getUserBookings = async (req, res) => {
   try {
