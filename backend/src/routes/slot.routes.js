@@ -4,6 +4,6 @@ const { getSlots, createSlots } = require('../controllers/slot.controller')
 const { protect, adminOnly } = require('../middleware/auth.middleware')
 
 router.get('/', getSlots)
-router.post('/', protect, adminOnly, createSlots)
+router.post('/', protect,  createSlots)
 
 module.exports = router

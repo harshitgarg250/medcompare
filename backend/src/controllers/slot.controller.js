@@ -1,13 +1,14 @@
 const prisma = require('../config/prisma')
 
-// Hospital ke slots get karo
+// Hospital ke slots get karo — testId ke saath
 const getSlots = async (req, res) => {
   try {
-    const { hospitalId, date } = req.query
+    const { hospitalId, date, testId } = req.query
 
     const slots = await prisma.slot.findMany({
       where: {
         hospitalId: parseInt(hospitalId),
+        ...(testId && { testId: parseInt(testId) }),
         ...(date && {
           date: {
             gte: new Date(date),
@@ -24,17 +25,19 @@ const getSlots = async (req, res) => {
   }
 }
 
-// Slots banao hospital ke liye
+// Slots banao — testId ke saath
 const createSlots = async (req, res) => {
   try {
-    const { hospitalId, date, times } = req.body
+    const { hospitalId, date, times, testId } = req.body
+    console.log('Creating slot:', { hospitalId, date, times, testId })
 
     const slots = await prisma.slot.createMany({
       data: times.map(time => ({
         hospitalId: parseInt(hospitalId),
         date: new Date(date),
         time,
-        isBooked: false
+        isBooked: false,
+        testId: testId ? parseInt(testId) : null
       }))
     })
 
@@ -43,6 +46,7 @@ const createSlots = async (req, res) => {
       count: slots.count
     })
   } catch (error) {
+    console.log('Slot error:', error.message)
     res.status(500).json({ message: 'Server error', error: error.message })
   }
 }

@@ -6,7 +6,6 @@ const createBooking = async (req, res) => {
     const { hospitalId, testId, slotId, totalPrice, notes } = req.body
     const userId = req.userId
 
-    // Check karo slot available hai ya nahi
     const slot = await prisma.slot.findUnique({
       where: { id: parseInt(slotId) }
     })
@@ -19,7 +18,6 @@ const createBooking = async (req, res) => {
       return res.status(400).json({ message: 'Slot already booked' })
     }
 
-    // Booking banao aur slot mark karo
     const booking = await prisma.booking.create({
       data: {
         userId,
@@ -32,7 +30,6 @@ const createBooking = async (req, res) => {
       }
     })
 
-    // Slot ko booked mark karo
     await prisma.slot.update({
       where: { id: parseInt(slotId) },
       data: { isBooked: true }

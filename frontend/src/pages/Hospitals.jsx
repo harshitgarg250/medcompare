@@ -36,7 +36,7 @@ function Hospitals() {
     queryKey: ['hospitals', userLocation],
     queryFn: () =>
       userLocation
-        ? API.get(`/hospitals/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&radius=20`).then(res => res.data)
+        ? API.get(`/hospitals/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&radius=5000`).then(res => res.data)
         : API.get('/hospitals').then(res => res.data),
     enabled: !locationLoading
   })
@@ -194,7 +194,7 @@ function Hospitals() {
                     <div className="text-xs text-gray-400">
                       Starting from
                       <span className="text-teal-600 font-bold text-base ml-1">
-                        ₹{Math.min(...hospital.tests.map(t => t.price))}
+                        ₹{hospital.tests?.length > 0 ? Math.min(...hospital.tests.map(t => t.price)) : 'N/A'}
                       </span>
                     </div>
                     <button className="bg-teal-600 text-white px-4 py-2 rounded-xl text-xs font-semibold hover:bg-teal-700 transition">

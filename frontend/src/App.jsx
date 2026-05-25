@@ -3,6 +3,10 @@ import Navbar from './components/Navbar'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Hospitals from './pages/Hospitals'
+import HospitalDetail from './pages/HospitalDetail'
+import Booking from './pages/Booking'
+
+
 
 function App() {
   return (
@@ -12,6 +16,8 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/hospitals" element={<Hospitals />} />
+        <Route path="/hospitals/:id" element={<HospitalDetail />} />
+        <Route path="/booking/:hospitalId" element={<Booking />} />
       </Routes>
     </div>
   )
