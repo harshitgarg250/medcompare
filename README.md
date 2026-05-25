@@ -61,10 +61,9 @@ npm run dev
 - [x] Auth APIs
 - [x] Hospital & Test APIs
 - [x] Booking APIs
-- [ ] Frontend pages
+- [x] Frontend pages (Landing, Login, Register, Hospitals, Hospital Detail, Booking, My Bookings)
 - [ ] Google Maps integration
 - [ ] Deployment
-
 ## Notes
 
 Still learning — open to feedback and suggestions.
