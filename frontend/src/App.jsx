@@ -8,6 +8,8 @@ import Booking from './pages/Booking'
 import MyBookings from './pages/MyBookings'
 import Register from './pages/Register'
 
+import ExternalHospital from './pages/ExternalHospital'
+
 
 
 
@@ -24,6 +26,7 @@ function App() {
         <Route path="/booking/:hospitalId" element={<Booking />} />
         <Route path="/my-bookings" element={<MyBookings />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/external-hospital" element={<ExternalHospital />} />
       </Routes>
     </div>
   )
