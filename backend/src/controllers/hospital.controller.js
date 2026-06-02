@@ -13,9 +13,7 @@ const getAllHospitals = async (req, res) => {
         ...(rating && { rating: { gte: parseFloat(rating) } })
       },
       include: {
-        tests: {
-          include: { test: true }
-        },
+        tests: { include: { test: true } },
         reviews: true
       }
     })
@@ -34,12 +32,12 @@ const getHospitalById = async (req, res) => {
     const hospital = await prisma.hospital.findUnique({
       where: { id: parseInt(id) },
       include: {
-        tests: {
-          include: { test: true }
-        },
+        tests: { include: { test: true } },
         slots: true,
         reviews: {
-          include: { user: { select: { name: true } } }
+          include: {
+            user: { select: { name: true } }
+          }
         }
       }
     })
@@ -57,10 +55,7 @@ const getHospitalById = async (req, res) => {
 // Hospital banao (admin only)
 const createHospital = async (req, res) => {
   try {
-    const {
-      name, type, address, city,
-      lat, lng, phone, email
-    } = req.body
+    const { name, type, address, city, lat, lng, phone, email } = req.body
 
     const hospital = await prisma.hospital.create({
       data: {
@@ -71,10 +66,7 @@ const createHospital = async (req, res) => {
       }
     })
 
-    res.status(201).json({
-      message: 'Hospital created successfully',
-      hospital
-    })
+    res.status(201).json({ message: 'Hospital created successfully', hospital })
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message })
   }
@@ -90,10 +82,17 @@ const getNearbyHospitals = async (req, res) => {
     }
 
     const hospitals = await prisma.hospital.findMany({
-      where: { isVerified: true }
+      where: { isVerified: true },
+      include: {
+        tests: { include: { test: true } },
+        reviews: {
+          include: {
+            user: { select: { name: true } }
+          }
+        }
+      }
     })
 
-    // Distance calculate karo (Haversine formula)
     const nearby = hospitals
       .map(h => {
         const distance = getDistance(
@@ -111,9 +110,9 @@ const getNearbyHospitals = async (req, res) => {
   }
 }
 
-// Haversine formula — do points ke beech distance km mein
+// Haversine formula
 const getDistance = (lat1, lng1, lat2, lng2) => {
-  const R = 6371 // Earth radius km
+  const R = 6371
   const dLat = ((lat2 - lat1) * Math.PI) / 180
   const dLng = ((lng2 - lng1) * Math.PI) / 180
   const a =
