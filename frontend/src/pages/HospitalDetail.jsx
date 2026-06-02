@@ -147,34 +147,43 @@ function HospitalDetail() {
               ))}
             </div>
           </div>
-
           {/* REVIEWS */}
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="font-bold text-gray-800">Patient Reviews</h2>
+<div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+  <div className="px-6 py-4 border-b border-gray-100">
+    <h2 className="font-bold text-gray-800">Patient Reviews</h2>
+    <p className="text-xs text-gray-400 mt-1">{hospital.reviews?.length || 0} reviews</p>
+  </div>
+  {!hospital.reviews || hospital.reviews.length === 0 ? (
+    <div className="px-6 py-8 text-center text-gray-400 text-sm">
+      No reviews yet — be the first to review!
+    </div>
+  ) : (
+    <div className="divide-y divide-gray-50">
+      {hospital.reviews.map((r) => (
+        <div key={r.id} className="px-6 py-4">
+          <div className="flex justify-between items-start mb-2">
+            <div>
+              <span className="font-semibold text-sm text-gray-700">
+                {r.user?.name || 'Anonymous'}
+              </span>
+              <div className="text-yellow-400 text-xs mt-1">
+                {'⭐'.repeat(r.rating)}
+              </div>
             </div>
-            {hospital.reviews?.length === 0 ? (
-              <div className="px-6 py-8 text-center text-gray-400 text-sm">
-                No reviews yet — be the first to review!
-              </div>
-            ) : (
-              <div className="divide-y divide-gray-50">
-                {hospital.reviews?.map((r) => (
-                  <div key={r.id} className="px-6 py-4">
-                    <div className="flex justify-between mb-1">
-                      <span className="font-semibold text-sm text-gray-700">
-                        {r.user?.name}
-                      </span>
-                      <span className="text-yellow-400 text-xs">
-                        {'⭐'.repeat(r.rating)}
-                      </span>
-                    </div>
-                    <p className="text-gray-500 text-sm">{r.comment}</p>
-                  </div>
-                ))}
-              </div>
-            )}
+            <span className="text-xs text-gray-300">
+              {new Date(r.createdAt).toLocaleDateString('en-IN', {
+                day: 'numeric', month: 'short', year: 'numeric'
+              })}
+            </span>
           </div>
+          {r.comment && (
+            <p className="text-gray-500 text-sm leading-relaxed">{r.comment}</p>
+          )}
+        </div>
+      ))}
+    </div>
+  )}
+</div>
         </div>
 
         {/* RIGHT — Info */}
