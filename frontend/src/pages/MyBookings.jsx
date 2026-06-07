@@ -9,9 +9,13 @@ function MyBookings() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
 
-  const { data: bookings, isLoading, refetch } = useQuery({
+  const {
+    data: bookings = [],
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ['my-bookings'],
-    queryFn: () => API.get('/bookings/my').then(res => res.data)
+    queryFn: () => API.get('/bookings/my').then((res) => res.data),
   })
 
   const handleCancel = async (id) => {
@@ -29,7 +33,9 @@ function MyBookings() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="text-5xl mb-4">🔒</div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">Please login first</h2>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">
+            Please login first
+          </h2>
           <button
             onClick={() => navigate('/login')}
             className="bg-teal-600 text-white px-6 py-3 rounded-xl font-bold mt-4"
@@ -41,15 +47,17 @@ function MyBookings() {
     )
   }
 
-  if (isLoading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
-    </div>
-  )
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
 
   const statusColor = {
     CONFIRMED: 'bg-green-50 text-green-600',
-    PENDING: 'bg-amber-50 text-amber-600',
+    PENDING: 'bg-yellow-50 text-yellow-600',
     CANCELLED: 'bg-red-50 text-red-500',
     COMPLETED: 'bg-blue-50 text-blue-600',
   }
@@ -62,112 +70,138 @@ function MyBookings() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-
-      {/* HEADER */}
-      <div className="bg-white border-b border-gray-100 px-6 py-6">
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-2xl font-extrabold text-gray-800">My Bookings</h1>
-          <p className="text-sm text-gray-400 mt-1">
-            {bookings?.length || 0} total appointments
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-6xl mx-auto px-4">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-800">
+            My Bookings
+          </h1>
+          <p className="text-gray-500 mt-2">
+            View and manage your hospital test bookings
           </p>
         </div>
-      </div>
 
-      <div className="max-w-3xl mx-auto px-6 py-8">
-
-        {/* EMPTY STATE */}
-        {bookings?.length === 0 && (
-          <div className="text-center py-20">
-            <div className="text-6xl mb-4">📋</div>
-            <h2 className="text-xl font-bold text-gray-800 mb-2">No bookings yet</h2>
-            <p className="text-gray-400 mb-6">Book your first diagnostic test today</p>
+        {bookings.length === 0 ? (
+          <div className="bg-white rounded-2xl p-10 text-center shadow-sm">
+            <div className="text-6xl mb-4">📅</div>
+            <h2 className="text-xl font-bold text-gray-700 mb-2">
+              No bookings found
+            </h2>
+            <p className="text-gray-500 mb-6">
+              You haven't booked any tests yet.
+            </p>
             <button
               onClick={() => navigate('/hospitals')}
-              className="bg-gradient-to-r from-teal-500 to-blue-500 text-white px-6 py-3 rounded-xl font-bold"
+              className="bg-teal-600 text-white px-6 py-3 rounded-xl font-semibold"
             >
-              Find Hospitals →
+              Browse Hospitals
             </button>
           </div>
-        )}
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {bookings.map((booking, index) => (
+              <motion.div
+                key={booking.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-white rounded-2xl border border-gray-100 p-4 hover:shadow-md transition"
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h3 className="font-bold text-gray-800 text-sm">
+                      {booking.hospital?.name}
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {booking.test?.name}
+                    </p>
+                  </div>
 
-        {/* BOOKINGS LIST */}
-        <div className="space-y-4">
-          {bookings?.map((booking, i) => (
-            <motion.div
-              key={booking.id}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.08 }}
-              className="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition"
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="font-bold text-gray-800 text-base">
-                    {booking.hospital?.name}
-                  </h3>
-                  <p className="text-sm text-gray-400">{booking.test?.name}</p>
-                </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-bold ${statusColor[booking.status]}`}>
-                  {statusIcon[booking.status]} {booking.status}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <div className="text-xs text-gray-400 mb-1">Date</div>
-                  <div className="text-sm font-semibold text-gray-700">
-                    {booking.slot?.date
-                      ? new Date(booking.slot.date).toLocaleDateString('en-IN', {
-                          day: 'numeric', month: 'short', year: 'numeric'
-                        })
-                      : 'N/A'}
-                  </div>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <div className="text-xs text-gray-400 mb-1">Time</div>
-                  <div className="text-sm font-semibold text-gray-700">
-                    {booking.slot?.time || 'N/A'}
-                  </div>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <div className="text-xs text-gray-400 mb-1">Amount</div>
-                  <div className="text-sm font-bold text-teal-600">
-                    ₹{booking.totalPrice}
-                  </div>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <div className="text-xs text-gray-400 mb-1">Booking ID</div>
-                  <div className="text-sm font-semibold text-gray-700">
-                    #{booking.id}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-                <span className="text-xs text-gray-400">
-                  📍 {booking.hospital?.address}
-                </span>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => navigate(`/hospitals/${booking.hospitalId}`)}
-                    className="border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-xs font-medium hover:border-teal-400 hover:text-teal-600 transition"
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-bold shrink-0 ${
+                      statusColor[booking.status]
+                    }`}
                   >
-                    View Hospital
-                  </button>
-                  {booking.status === 'CONFIRMED' && (
-                    <button
-                      onClick={() => handleCancel(booking.id)}
-                      className="bg-red-50 text-red-500 px-4 py-2 rounded-xl text-xs font-medium hover:bg-red-100 transition"
-                    >
-                      Cancel
-                    </button>
-                  )}
+                    {statusIcon[booking.status]} {booking.status}
+                  </span>
                 </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <div className="bg-gray-50 rounded-xl p-2.5">
+                    <div className="text-xs text-gray-400 mb-0.5">
+                      Date
+                    </div>
+                    <div className="text-xs font-semibold text-gray-700">
+                      {booking.slot?.date
+                        ? new Date(
+                            booking.slot.date
+                          ).toLocaleDateString('en-IN', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })
+                        : 'N/A'}
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-xl p-2.5">
+                    <div className="text-xs text-gray-400 mb-0.5">
+                      Time
+                    </div>
+                    <div className="text-xs font-semibold text-gray-700">
+                      {booking.slot?.time || 'N/A'}
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-xl p-2.5">
+                    <div className="text-xs text-gray-400 mb-0.5">
+                      Amount
+                    </div>
+                    <div className="text-sm font-bold text-teal-600">
+                      ₹{booking.totalPrice}
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-xl p-2.5">
+                    <div className="text-xs text-gray-400 mb-0.5">
+                      Booking ID
+                    </div>
+                    <div className="text-xs font-semibold text-gray-700">
+                      #{booking.id}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+                  <span className="text-xs text-gray-400 truncate max-w-[140px]">
+                    📍 {booking.hospital?.address}
+                  </span>
+
+                  <div className="flex gap-2 shrink-0">
+                    <button
+                      onClick={() =>
+                        navigate(`/hospitals/${booking.hospitalId}`)
+                      }
+                      className="border border-gray-200 text-gray-600 px-3 py-1.5 rounded-xl text-xs font-medium"
+                    >
+                      View
+                    </button>
+
+                    {booking.status === 'CONFIRMED' && (
+                      <button
+                        onClick={() => handleCancel(booking.id)}
+                        className="bg-red-50 text-red-500 px-3 py-1.5 rounded-xl text-xs font-medium"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

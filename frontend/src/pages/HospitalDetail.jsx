@@ -49,64 +49,46 @@ function HospitalDetail() {
     <div className="min-h-screen bg-gray-50">
 
       {/* HEADER */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="max-w-5xl mx-auto px-6 py-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="text-gray-400 hover:text-teal-600 text-sm mb-4 flex items-center gap-1 transition"
-          >
-            ← Back to results
-          </button>
-
-          <div className="flex flex-col md:flex-row justify-between gap-6">
-            <div className="flex gap-4 items-start">
-              <div className="w-16 h-16 bg-teal-50 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0">
-                🏥
-              </div>
-              <div>
-                <h1 className="text-2xl font-extrabold text-gray-800 mb-1">
-                  {hospital.name}
-                </h1>
-                <p className="text-gray-400 text-sm mb-3">{hospital.type}</p>
-                <div className="flex flex-wrap gap-2">
-                  <span className="bg-amber-50 text-amber-600 px-3 py-1 rounded-lg text-xs font-bold">
-                    ⭐ {hospital.rating || 'New'}
-                  </span>
-                  <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
-                    hospital.isOpen
-                      ? 'bg-green-50 text-green-600'
-                      : 'bg-red-50 text-red-500'
-                  }`}>
-                    {hospital.isOpen ? '🟢 Open Now' : '🔴 Closed'}
-                  </span>
-                  <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-xs font-bold">
-                    📍 {hospital.city}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* BOOK BUTTON */}
-            <div className="flex flex-col gap-2 min-w-[200px]">
-              {selectedTest && (
-                <div className="text-right">
-                  <div className="text-xs text-gray-400">Selected test</div>
-                  <div className="font-bold text-gray-700">{selectedTest.test?.name}</div>
-                  <div className="text-2xl font-extrabold text-teal-600">₹{selectedTest.price}</div>
-                </div>
-              )}
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={handleBook}
-                className="bg-gradient-to-r from-teal-500 to-blue-500 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition shadow-lg"
-              >
-                📅 Book Appointment
-              </motion.button>
-            </div>
+      <div className="bg-white border-b border-gray-100 px-4 py-4">
+  <div className="max-w-5xl mx-auto">
+    <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-teal-600 text-sm mb-3 flex items-center gap-1">
+      ← Back to results
+    </button>
+    <div className="flex flex-col sm:flex-row justify-between gap-4">
+      <div className="flex gap-3 items-start">
+        <div className="w-12 h-12 bg-teal-50 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">🏥</div>
+        <div>
+          <h1 className="text-xl font-extrabold text-gray-800 mb-1">{hospital.name}</h1>
+          <p className="text-gray-400 text-xs mb-2">{hospital.type}</p>
+          <div className="flex flex-wrap gap-2">
+            <span className="bg-amber-50 text-amber-600 px-2 py-1 rounded-lg text-xs font-bold">⭐ {hospital.rating || 'New'}</span>
+            <span className={`px-2 py-1 rounded-lg text-xs font-bold ${hospital.isOpen ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
+              {hospital.isOpen ? '🟢 Open Now' : '🔴 Closed'}
+            </span>
+            <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-lg text-xs font-bold">📍 {hospital.city}</span>
           </div>
         </div>
       </div>
+      <div className="flex flex-col gap-2 sm:min-w-[180px]">
+        {selectedTest && (
+          <div className="text-left sm:text-right">
+            <div className="text-xs text-gray-400">Selected</div>
+            <div className="font-bold text-gray-700 text-sm">{selectedTest.test?.name}</div>
+            <div className="text-xl font-extrabold text-teal-600">₹{selectedTest.price}</div>
+          </div>
+        )}
+        <motion.button
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={handleBook}
+          className="bg-gradient-to-r from-teal-500 to-blue-500 text-white px-5 py-3 rounded-xl font-bold text-sm hover:opacity-90 transition shadow-lg w-full"
+        >
+          📅 Book Appointment
+        </motion.button>
+      </div>
+    </div>
+  </div>
+</div>
 
       <div className="max-w-5xl mx-auto px-6 py-8 grid grid-cols-1 md:grid-cols-3 gap-6">
 

@@ -94,8 +94,8 @@ function Hospitals() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* TOP BAR */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10 px-6 py-4">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="bg-white border-b border-gray-200 sticky top-[57px] z-10 px-4 py-3">
+        <div className="max-w-6xl mx-auto flex flex-col gap-3">
           <div className="flex gap-2 flex-wrap w-full md:w-auto">
             <div className="flex gap-2 bg-gray-100 rounded-xl px-4 py-2 w-full md:w-72">
               <span className="text-gray-400">🔍</span>
@@ -126,12 +126,12 @@ function Hospitals() {
             </div>
           </div>
 
-          <div className="flex gap-2 flex-wrap items-center">
+          <div className="flex gap-2 flex-wrap items-center justify-center md:justify-start">
             {FILTERS.map((f) => (
               <button
                 key={f}
                 onClick={() => setActiveFilter(f)}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-medium transition ${
                   activeFilter === f
                     ? "bg-teal-600 text-white"
                     : "bg-white border border-gray-200 text-gray-600 hover:border-teal-400"
@@ -142,10 +142,10 @@ function Hospitals() {
             ))}
             <button
               onClick={() => setShowMap(!showMap)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition border ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition border ${
                 showMap
                   ? "bg-teal-600 text-white border-teal-600"
-                  : "bg-white border-gray-200 text-gray-600 hover:border-teal-400"
+                  : "bg-white border-gray-200 text-gray-600"
               }`}
             >
               🗺️ {showMap ? "Hide Map" : "Show Map"}
