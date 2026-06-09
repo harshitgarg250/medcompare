@@ -74,20 +74,39 @@ function Hospitals() {
         )
       );
     })
+    ?.filter((h) => {
+      if (activeFilter === "Open Now") return h.isOpen === true;
+      return true;
+    })
     ?.sort((a, b) => {
-      if (activeFilter === "Nearest") return a.distance - b.distance;
-      if (activeFilter === "Top Rated") return b.rating - a.rating;
-      if (activeFilter === "Lowest Price")
-        return (a.tests?.[0]?.price || 0) - (b.tests?.[0]?.price || 0);
-      if (activeFilter === "Open Now") return b.isOpen - a.isOpen;
+      if (activeFilter === "Nearest")
+        return (a.distance || 0) - (b.distance || 0);
+      if (activeFilter === "Top Rated")
+        return (b.rating || 0) - (a.rating || 0);
+      if (activeFilter === "Lowest Price") {
+        const aMin =
+          a.tests?.length > 0
+            ? Math.min(...a.tests.map((t) => t.price))
+            : 99999;
+        const bMin =
+          b.tests?.length > 0
+            ? Math.min(...b.tests.map((t) => t.price))
+            : 99999;
+        return aMin - bMin;
+      }
+      // Default All — Best Value
       const scoreA =
         (a.distance || 0) -
         (a.rating || 0) +
-        Math.min(...(a.tests?.map((t) => t.price) || [0])) / 1000;
+        (a.tests?.length > 0
+          ? Math.min(...a.tests.map((t) => t.price)) / 1000
+          : 0);
       const scoreB =
         (b.distance || 0) -
         (b.rating || 0) +
-        Math.min(...(b.tests?.map((t) => t.price) || [0])) / 1000;
+        (b.tests?.length > 0
+          ? Math.min(...b.tests.map((t) => t.price)) / 1000
+          : 0);
       return scoreA - scoreB;
     });
 

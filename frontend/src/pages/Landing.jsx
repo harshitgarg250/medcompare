@@ -61,14 +61,19 @@ const TESTIMONIALS = [
 ];
 
 // Reusable scroll-triggered animation — repeats every time
-function FadeInSection({ children, className = "", delay = 0, direction = "up" }) {
+function FadeInSection({
+  children,
+  className = "",
+  delay = 0,
+  direction = "up",
+}) {
   const ref = useRef(null);
   const [inView, setInView] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => setInView(entry.isIntersecting),
-      { threshold: 0.12 }
+      { threshold: 0.12 },
     );
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
@@ -123,11 +128,10 @@ function Landing() {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-white">
-
+    <div className="min-h-screen overflow-x-hidden">
       {/* ── HERO ── */}
       <div
-        className="relative min-h-screen flex flex-col items-center justify-center px-6"
+        className="relative min-h-screen flex flex-col items-center justify-center px-4 w-full"
         style={{ background: heroBg, transition: "background 0.4s ease" }}
       >
         {/* Soft blobs — subtle, not distracting */}
@@ -174,9 +178,11 @@ function Landing() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.3 }}
             onSubmit={handleSearch}
-            className="flex gap-3 max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-2 border border-gray-100 mb-6"
+            className="flex gap-2 w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-2 border border-gray-100 mb-6"
           >
-            <span className="pl-3 flex items-center text-gray-400 text-xl">🔍</span>
+            <span className="pl-3 flex items-center text-gray-400 text-xl">
+              🔍
+            </span>
             <input
               type="text"
               value={search}
@@ -186,9 +192,9 @@ function Landing() {
             />
             <button
               type="submit"
-              className="bg-gradient-to-r from-teal-500 to-blue-500 text-white px-7 py-3 rounded-xl font-semibold hover:opacity-90 transition"
+              className="bg-gradient-to-r from-teal-500 to-blue-500 text-white px-4 py-3 rounded-xl font-semibold hover:opacity-90 transition text-sm whitespace-nowrap shrink-0"
             >
-              Search Nearby
+              Search
             </button>
           </motion.form>
 
@@ -197,7 +203,7 @@ function Landing() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="flex flex-wrap justify-center gap-3"
+            className="flex flex-wrap justify-center gap-2 px-2 w-full"
           >
             {POPULAR_TESTS.map((test, i) => (
               <motion.button
@@ -211,7 +217,9 @@ function Landing() {
               >
                 <span>{test.icon}</span>
                 <span>{test.name}</span>
-                <span className="text-teal-500 font-semibold text-xs">from {test.price}</span>
+                <span className="text-teal-500 font-semibold text-xs">
+                  from {test.price}
+                </span>
               </motion.button>
             ))}
           </motion.div>
@@ -236,7 +244,9 @@ function Landing() {
               <FadeInSection key={stat.label} delay={i * 0.08}>
                 <div className="text-center p-6 rounded-2xl border border-gray-100 hover:shadow-md hover:-translate-y-1 transition cursor-default">
                   <div className="text-3xl mb-2">{stat.icon}</div>
-                  <div className="text-4xl font-extrabold text-teal-600 mb-1">{stat.num}</div>
+                  <div className="text-4xl font-extrabold text-teal-600 mb-1">
+                    {stat.num}
+                  </div>
                   <div className="text-gray-500 text-sm">{stat.label}</div>
                 </div>
               </FadeInSection>
@@ -249,7 +259,9 @@ function Landing() {
       <section className="py-20 bg-gray-50">
         <div className="max-w-5xl mx-auto px-6">
           <FadeInSection className="text-center mb-12">
-            <h2 className="text-4xl font-extrabold text-gray-800 mb-3">How it works</h2>
+            <h2 className="text-4xl font-extrabold text-gray-800 mb-3">
+              How it works
+            </h2>
             <p className="text-gray-400">Book your test in 3 simple steps</p>
           </FadeInSection>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -260,14 +272,20 @@ function Landing() {
                 direction={i === 0 ? "right" : i === 2 ? "left" : "up"}
               >
                 <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition text-center">
-                  <div className={`w-16 h-16 ${step.color} rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5`}>
+                  <div
+                    className={`w-16 h-16 ${step.color} rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5`}
+                  >
                     {step.icon}
                   </div>
                   <div className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">
                     Step {i + 1}
                   </div>
-                  <div className="font-bold text-gray-800 text-lg mb-2">{step.title}</div>
-                  <div className="text-gray-500 text-sm leading-relaxed">{step.desc}</div>
+                  <div className="font-bold text-gray-800 text-lg mb-2">
+                    {step.title}
+                  </div>
+                  <div className="text-gray-500 text-sm leading-relaxed">
+                    {step.desc}
+                  </div>
                 </div>
               </FadeInSection>
             ))}
@@ -279,8 +297,12 @@ function Landing() {
       <section className="py-20 bg-white">
         <div className="max-w-5xl mx-auto px-6">
           <FadeInSection className="text-center mb-12">
-            <h2 className="text-4xl font-extrabold text-gray-800 mb-3">Popular Tests</h2>
-            <p className="text-gray-400">Click any test to compare prices nearby</p>
+            <h2 className="text-4xl font-extrabold text-gray-800 mb-3">
+              Popular Tests
+            </h2>
+            <p className="text-gray-400">
+              Click any test to compare prices nearby
+            </p>
           </FadeInSection>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
             {POPULAR_TESTS.map((test, i) => (
@@ -291,8 +313,12 @@ function Landing() {
                   className="w-full bg-gradient-to-br from-gray-50 to-white border border-gray-100 rounded-2xl p-6 text-left hover:shadow-lg hover:border-teal-200 transition"
                 >
                   <div className="text-3xl mb-3">{test.icon}</div>
-                  <div className="font-bold text-gray-800 mb-1">{test.name}</div>
-                  <div className="text-teal-600 font-semibold text-sm">Starting {test.price}</div>
+                  <div className="font-bold text-gray-800 mb-1">
+                    {test.name}
+                  </div>
+                  <div className="text-teal-600 font-semibold text-sm">
+                    Starting {test.price}
+                  </div>
                 </motion.button>
               </FadeInSection>
             ))}
@@ -304,15 +330,21 @@ function Landing() {
       <section className="py-20 bg-gradient-to-br from-teal-600 to-indigo-600">
         <div className="max-w-5xl mx-auto px-6">
           <FadeInSection className="text-center mb-12">
-            <h2 className="text-4xl font-extrabold text-white mb-3">What patients say</h2>
+            <h2 className="text-4xl font-extrabold text-white mb-3">
+              What patients say
+            </h2>
             <p className="text-teal-100">Real reviews from real users</p>
           </FadeInSection>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {TESTIMONIALS.map((t, i) => (
               <FadeInSection key={t.name} delay={i * 0.1} direction="up">
                 <div className="bg-white bg-opacity-10 backdrop-blur-sm border border-white border-opacity-20 rounded-2xl p-6 text-white hover:bg-opacity-20 transition">
-                  <div className="text-yellow-300 mb-3 text-sm">{"⭐".repeat(t.rating)}</div>
-                  <p className="text-teal-50 mb-4 text-sm leading-relaxed">"{t.text}"</p>
+                  <div className="text-yellow-300 mb-3 text-sm">
+                    {"⭐".repeat(t.rating)}
+                  </div>
+                  <p className="text-teal-50 mb-4 text-sm leading-relaxed">
+                    "{t.text}"
+                  </p>
                   <div className="font-bold text-sm">{t.name}</div>
                   <div className="text-teal-200 text-xs">{t.city}</div>
                 </div>
@@ -353,7 +385,6 @@ function Landing() {
           </FadeInSection>
         </div>
       </section>
-
     </div>
   );
 }
