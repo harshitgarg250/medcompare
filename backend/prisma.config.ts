@@ -1,11 +1,7 @@
-const { PrismaClient } = require('@prisma/client')
-const { PrismaPg } = require('@prisma/adapter-pg')
+import { defineConfig } from 'prisma/config'
 
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+export default defineConfig({
+  datasource: {
+    url: process.env.DATABASE_URL,
+  },
 })
-
-const prisma = new PrismaClient({ adapter })
-
-module.exports = prisma
