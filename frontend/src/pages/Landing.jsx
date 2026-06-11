@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
-const POPULAR_TESTS = [
+const CATEGORIES = [
   { name: "Blood Test", icon: "🩸", price: "₹80" },
   { name: "MRI Scan", icon: "🧲", price: "₹2,500" },
   { name: "X-Ray", icon: "🦴", price: "₹200" },
@@ -12,115 +12,29 @@ const POPULAR_TESTS = [
 ];
 
 const STATS = [
-  { num: "240+", label: "Hospitals & Labs", icon: "🏥" },
-  { num: "50K+", label: "Tests Compared", icon: "🔬" },
-  { num: "60%", label: "Average Savings", icon: "💰" },
-  { num: "4.8★", label: "User Rating", icon: "⭐" },
+  { num: "240+", label: "Hospitals", icon: "🏥" },
+  { num: "50K+", label: "Tests Done", icon: "🔬" },
+  { num: "60%", label: "Avg Savings", icon: "💰" },
+  { num: "24/7", label: "Support", icon: "🎯" },
 ];
 
-const HOW_IT_WORKS = [
-  {
-    icon: "📍",
-    title: "Share Location",
-    desc: "We detect your location and find the best hospitals nearby",
-    color: "bg-blue-50 text-blue-500",
-  },
-  {
-    icon: "⚖️",
-    title: "Compare Prices",
-    desc: "See test prices, ratings, and distance all in one place",
-    color: "bg-teal-50 text-teal-500",
-  },
-  {
-    icon: "📅",
-    title: "Book Instantly",
-    desc: "Choose a slot and confirm your appointment in seconds",
-    color: "bg-purple-50 text-purple-500",
-  },
+const STEPS = [
+  { step: "01", title: "Share Location", desc: "We find hospitals near you", icon: "📍", color: "bg-blue-50 text-blue-600" },
+  { step: "02", title: "Compare Prices", desc: "See prices, ratings & distance", icon: "⚖️", color: "bg-teal-50 text-teal-600" },
+  { step: "03", title: "Book Instantly", desc: "Confirm in seconds", icon: "📅", color: "bg-purple-50 text-purple-600" },
 ];
 
-const TESTIMONIALS = [
-  {
-    name: "Priya S.",
-    city: "Dehradun",
-    text: "Saved ₹1,800 on my MRI scan! Found a great lab 2km away.",
-    rating: 5,
-  },
-  {
-    name: "Rajesh K.",
-    city: "Delhi",
-    text: "So easy to compare prices. Booked blood test in under a minute.",
-    rating: 5,
-  },
-  {
-    name: "Anita M.",
-    city: "Mumbai",
-    text: "Best app for finding affordable diagnostics near you.",
-    rating: 4,
-  },
-];
-
-// Reusable scroll-triggered animation — repeats every time
-function FadeInSection({
-  children,
-  className = "",
-  delay = 0,
-  direction = "up",
-}) {
-  const ref = useRef(null);
-  const [inView, setInView] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => setInView(entry.isIntersecting),
-      { threshold: 0.12 },
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, []);
-
-  const variants = {
-    hidden: {
-      opacity: 0,
-      y: direction === "up" ? 30 : direction === "down" ? -30 : 0,
-      x: direction === "left" ? 30 : direction === "right" ? -30 : 0,
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      x: 0,
-    },
-  };
-
-  return (
-    <motion.div
-      ref={ref}
-      variants={variants}
-      initial="hidden"
-      animate={inView ? "visible" : "hidden"}
-      transition={{ duration: 0.55, delay, ease: "easeOut" }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-function Landing() {
+export default function Landing() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const { scrollY } = useScroll();
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [scrollY, setScrollY] = useState(0);
 
-  // Subtle hero background color shift on scroll
-  const [scrollVal, setScrollVal] = useState(0);
   useEffect(() => {
-    return scrollY.on("change", (v) => setScrollVal(v));
-  }, [scrollY]);
-
-  const heroBg = `linear-gradient(135deg,
-    hsl(168, 60%, ${Math.max(88, 96 - scrollVal * 0.008)}%) 0%,
-    hsl(210, 50%, ${Math.max(90, 97 - scrollVal * 0.006)}%) 50%,
-    hsl(250, 45%, ${Math.max(91, 96 - scrollVal * 0.005)}%) 100%)`;
+    const fn = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", fn, { passive: true });
+    return () => window.removeEventListener("scroll", fn);
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -128,265 +42,210 @@ function Landing() {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden">
-      {/* ── HERO ── */}
-      <div
-        className="relative min-h-screen flex flex-col items-center justify-center px-4 w-full"
-        style={{ background: heroBg, transition: "background 0.4s ease" }}
-      >
-        {/* Soft blobs — subtle, not distracting */}
-        <div className="absolute top-24 left-16 w-64 h-64 bg-teal-100 rounded-full opacity-40 blur-3xl pointer-events-none" />
-        <div className="absolute bottom-24 right-16 w-80 h-80 bg-blue-100 rounded-full opacity-40 blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-white overflow-x-hidden">
 
-        <div className="relative z-10 text-center max-w-4xl mx-auto">
+      {/* ── HERO ── */}
+      <section
+        className="relative pt-8 pb-10 px-4"
+        style={{
+          background: `linear-gradient(160deg,
+            hsl(168,55%,${Math.max(92, 97 - scrollY * 0.005)}%) 0%,
+            hsl(210,45%,${Math.max(94, 98 - scrollY * 0.003)}%) 60%,
+            white 100%)`
+        }}
+      >
+        {/* Blobs */}
+        <div className="absolute top-0 right-0 w-48 h-48 bg-teal-100 rounded-full opacity-40 blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-100 rounded-full opacity-30 blur-3xl translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+
+        <div className="max-w-2xl mx-auto relative z-10">
+          {/* Badge */}
           <motion.div
-            initial={{ opacity: 0, y: -16 }}
+            initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 bg-white bg-opacity-90 text-teal-700 px-5 py-2 rounded-full text-sm font-medium mb-8 shadow-sm border border-teal-100"
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 bg-white bg-opacity-80 text-teal-700 px-3 py-1.5 rounded-full text-xs font-semibold mb-4 shadow-sm border border-teal-100"
           >
-            🔬 Compare 500+ Diagnostic Tests Near You
+            🔬 Compare 500+ Diagnostic Tests
           </motion.div>
 
+          {/* Headline */}
           <motion.h1
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-            className="text-5xl md:text-7xl font-extrabold text-gray-900 mb-6 leading-tight"
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight mb-3"
           >
             Find the{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 via-blue-500 to-indigo-500">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-500">
               Best Price
             </span>
-            <br />
-            for Every Medical Test
+            {" "}for Every Medical Test
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-gray-500 text-xl mb-10 max-w-xl mx-auto leading-relaxed"
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-gray-500 text-sm sm:text-base mb-6 max-w-md"
           >
-            Compare hospitals, check ratings, view distance — book in seconds.
-            Save up to 60% on diagnostics.
+            Compare hospitals, check ratings, view distance — book in seconds. Save up to 60%.
           </motion.p>
 
           {/* Search */}
           <motion.form
-            initial={{ opacity: 0, scale: 0.96 }}
+            initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
             onSubmit={handleSearch}
-            className="flex gap-2 w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-2 border border-gray-100 mb-6"
+            className="flex gap-2 bg-white rounded-2xl shadow-lg p-1.5 border border-gray-100 mb-5"
           >
-            <span className="pl-3 flex items-center text-gray-400 text-xl">
-              🔍
-            </span>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search for MRI, Blood Test, X-Ray..."
-              className="flex-1 outline-none text-gray-700 text-base placeholder-gray-400 bg-transparent py-2"
-            />
+            <div className="flex items-center gap-2 flex-1 px-3">
+              <span className="text-gray-400 text-base shrink-0">🔍</span>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search MRI, Blood Test, X-Ray..."
+                className="flex-1 outline-none text-gray-700 text-sm bg-transparent placeholder-gray-400 min-w-0"
+              />
+            </div>
             <button
               type="submit"
-              className="bg-gradient-to-r from-teal-500 to-blue-500 text-white px-4 py-3 rounded-xl font-semibold hover:opacity-90 transition text-sm whitespace-nowrap shrink-0"
+              className="bg-gradient-to-r from-teal-500 to-blue-500 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:opacity-90 transition shrink-0"
             >
               Search
             </button>
           </motion.form>
 
-          {/* Test chips */}
+          {/* Category chips — horizontal scroll */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="flex flex-wrap justify-center gap-2 px-2 w-full"
+            transition={{ delay: 0.35 }}
+            className="flex gap-2 overflow-x-auto pb-1 scroll-smooth"
+            style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}
           >
-            {POPULAR_TESTS.map((test, i) => (
-              <motion.button
-                key={test.name}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.45 + i * 0.05 }}
-                whileHover={{ scale: 1.04, y: -2 }}
-                onClick={() => navigate(`/hospitals?search=${test.name}`)}
-                className="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-full text-sm hover:border-teal-400 hover:text-teal-600 hover:shadow-md transition flex items-center gap-2"
+            {CATEGORIES.map((c) => (
+              <button
+                key={c.name}
+                onClick={() => { setActiveCategory(c.name); navigate(`/hospitals?search=${c.name}`); }}
+                style={{ scrollSnapAlign: "start" }}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border whitespace-nowrap shrink-0 transition ${
+                  activeCategory === c.name
+                    ? "bg-teal-600 text-white border-teal-600"
+                    : "bg-white text-gray-600 border-gray-200 hover:border-teal-400"
+                }`}
               >
-                <span>{test.icon}</span>
-                <span>{test.name}</span>
-                <span className="text-teal-500 font-semibold text-xs">
-                  from {test.price}
+                <span>{c.icon}</span>
+                <span>{c.name}</span>
+                <span className={`font-semibold ${activeCategory === c.name ? "text-teal-100" : "text-teal-500"}`}>
+                  {c.price}
                 </span>
-              </motion.button>
+              </button>
             ))}
           </motion.div>
         </div>
-
-        {/* Scroll cue */}
-        <motion.div
-          animate={{ y: [0, 6, 0] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-          className="absolute bottom-8 flex flex-col items-center gap-1 text-gray-400 text-xs"
-        >
-          <span>Scroll to explore</span>
-          <span className="text-base">↓</span>
-        </motion.div>
-      </div>
+      </section>
 
       {/* ── STATS ── */}
-      <section className="py-20 bg-white">
-        <div className="max-w-5xl mx-auto px-6">
-          <FadeInSection className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {STATS.map((stat, i) => (
-              <FadeInSection key={stat.label} delay={i * 0.08}>
-                <div className="text-center p-6 rounded-2xl border border-gray-100 hover:shadow-md hover:-translate-y-1 transition cursor-default">
-                  <div className="text-3xl mb-2">{stat.icon}</div>
-                  <div className="text-4xl font-extrabold text-teal-600 mb-1">
-                    {stat.num}
-                  </div>
-                  <div className="text-gray-500 text-sm">{stat.label}</div>
-                </div>
-              </FadeInSection>
-            ))}
-          </FadeInSection>
+      <section className="px-4 py-8 bg-white">
+        <div className="max-w-2xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {STATS.map((s, i) => (
+            <motion.div
+              key={s.label}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false }}
+              transition={{ delay: i * 0.07 }}
+              className="bg-gray-50 rounded-2xl p-4 text-center hover:shadow-md hover:-translate-y-0.5 transition"
+            >
+              <div className="text-xl mb-1">{s.icon}</div>
+              <div className="text-xl font-extrabold text-teal-600">{s.num}</div>
+              <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
+            </motion.div>
+          ))}
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ── */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-5xl mx-auto px-6">
-          <FadeInSection className="text-center mb-12">
-            <h2 className="text-4xl font-extrabold text-gray-800 mb-3">
-              How it works
-            </h2>
-            <p className="text-gray-400">Book your test in 3 simple steps</p>
-          </FadeInSection>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {HOW_IT_WORKS.map((step, i) => (
-              <FadeInSection
-                key={step.title}
-                delay={i * 0.12}
-                direction={i === 0 ? "right" : i === 2 ? "left" : "up"}
-              >
-                <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition text-center">
-                  <div
-                    className={`w-16 h-16 ${step.color} rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5`}
-                  >
-                    {step.icon}
-                  </div>
-                  <div className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">
-                    Step {i + 1}
-                  </div>
-                  <div className="font-bold text-gray-800 text-lg mb-2">
-                    {step.title}
-                  </div>
-                  <div className="text-gray-500 text-sm leading-relaxed">
-                    {step.desc}
-                  </div>
-                </div>
-              </FadeInSection>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ── HOW IT WORKS — compact timeline ── */}
+      <section className="px-4 py-8 bg-gray-50">
+        <div className="max-w-2xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false }}
+            className="text-center mb-6"
+          >
+            <h2 className="text-xl font-extrabold text-gray-800">How it works</h2>
+            <p className="text-gray-400 text-xs mt-1">3 simple steps</p>
+          </motion.div>
 
-      {/* ── POPULAR TESTS ── */}
-      <section className="py-20 bg-white">
-        <div className="max-w-5xl mx-auto px-6">
-          <FadeInSection className="text-center mb-12">
-            <h2 className="text-4xl font-extrabold text-gray-800 mb-3">
-              Popular Tests
-            </h2>
-            <p className="text-gray-400">
-              Click any test to compare prices nearby
-            </p>
-          </FadeInSection>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
-            {POPULAR_TESTS.map((test, i) => (
-              <FadeInSection key={test.name} delay={i * 0.07}>
-                <motion.button
-                  whileHover={{ scale: 1.03, y: -3 }}
-                  onClick={() => navigate(`/hospitals?search=${test.name}`)}
-                  className="w-full bg-gradient-to-br from-gray-50 to-white border border-gray-100 rounded-2xl p-6 text-left hover:shadow-lg hover:border-teal-200 transition"
+          <div className="relative">
+            {/* Line */}
+            <div className="absolute left-6 top-6 bottom-6 w-0.5 bg-gray-200 hidden sm:block" />
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              {STEPS.map((s, i) => (
+                <motion.div
+                  key={s.step}
+                  initial={{ opacity: 0, x: -16 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: false }}
+                  transition={{ delay: i * 0.12 }}
+                  className="flex-1 bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex sm:flex-col gap-3 sm:gap-2 items-start sm:items-center sm:text-center"
                 >
-                  <div className="text-3xl mb-3">{test.icon}</div>
-                  <div className="font-bold text-gray-800 mb-1">
-                    {test.name}
+                  <div className={`w-10 h-10 ${s.color} rounded-xl flex items-center justify-center text-lg shrink-0`}>
+                    {s.icon}
                   </div>
-                  <div className="text-teal-600 font-semibold text-sm">
-                    Starting {test.price}
+                  <div>
+                    <div className="text-xs font-bold text-gray-400 mb-0.5">Step {s.step}</div>
+                    <div className="font-bold text-gray-800 text-sm">{s.title}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">{s.desc}</div>
                   </div>
-                </motion.button>
-              </FadeInSection>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── TESTIMONIALS ── */}
-      <section className="py-20 bg-gradient-to-br from-teal-600 to-indigo-600">
-        <div className="max-w-5xl mx-auto px-6">
-          <FadeInSection className="text-center mb-12">
-            <h2 className="text-4xl font-extrabold text-white mb-3">
-              What patients say
-            </h2>
-            <p className="text-teal-100">Real reviews from real users</p>
-          </FadeInSection>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map((t, i) => (
-              <FadeInSection key={t.name} delay={i * 0.1} direction="up">
-                <div className="bg-white bg-opacity-10 backdrop-blur-sm border border-white border-opacity-20 rounded-2xl p-6 text-white hover:bg-opacity-20 transition">
-                  <div className="text-yellow-300 mb-3 text-sm">
-                    {"⭐".repeat(t.rating)}
-                  </div>
-                  <p className="text-teal-50 mb-4 text-sm leading-relaxed">
-                    "{t.text}"
-                  </p>
-                  <div className="font-bold text-sm">{t.name}</div>
-                  <div className="text-teal-200 text-xs">{t.city}</div>
-                </div>
-              </FadeInSection>
-            ))}
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* ── CTA ── */}
-      <section className="py-20 bg-white text-center">
-        <div className="max-w-2xl mx-auto px-6">
-          <FadeInSection>
-            <h2 className="text-4xl font-extrabold text-gray-800 mb-4">
+      <section className="px-4 py-10 bg-gradient-to-br from-teal-600 to-blue-600 text-center">
+        <div className="max-w-md mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false }}
+          >
+            <h2 className="text-xl font-extrabold text-white mb-2">
               Ready to save on your next test?
             </h2>
-            <p className="text-gray-500 mb-8">
+            <p className="text-teal-100 text-sm mb-5">
               Join 50,000+ users who compare before they book
             </p>
-            <div className="flex gap-4 justify-center flex-wrap">
+            <div className="flex gap-3 justify-center flex-wrap">
               <motion.button
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => navigate("/hospitals")}
-                className="bg-gradient-to-r from-teal-500 to-blue-500 text-white px-8 py-4 rounded-2xl font-bold text-base shadow-lg hover:opacity-90 transition"
+                className="bg-white text-teal-600 px-6 py-3 rounded-2xl font-bold text-sm shadow-lg hover:shadow-xl transition"
               >
                 Find Hospitals Near Me 📍
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.97 }}
-                onClick={() => navigate("/login")}
-                className="border-2 border-gray-200 text-gray-700 px-8 py-4 rounded-2xl font-bold text-base hover:border-teal-400 hover:text-teal-600 transition"
+                onClick={() => navigate("/register")}
+                className="border-2 border-white border-opacity-60 text-white px-6 py-3 rounded-2xl font-bold text-sm hover:bg-white hover:bg-opacity-10 transition"
               >
                 Create Free Account
               </motion.button>
             </div>
-          </FadeInSection>
+          </motion.div>
         </div>
       </section>
+
     </div>
   );
 }
-
-export default Landing;
