@@ -48,8 +48,6 @@ function SetCenter({ center }) {
 
 // Real hospitals fetch from Overpass API
 function FetchRealHospitals({ center, onFetch }) {
-  const map = useMap();
-
   useEffect(() => {
     if (!center) return;
 
@@ -79,7 +77,7 @@ function FetchRealHospitals({ center, onFetch }) {
     };
 
     fetchHospitals();
-  }, [center]);
+  }, [center, onFetch]);
 
   return null;
 }

@@ -64,7 +64,7 @@ function Booking() {
         })
         .catch(() => {});
     }
-  }, [selectedDate, hospitalId, testId]);
+  }, [selectedDate, hospitalId, testId, selectedTime]);
 
   const handleBooking = async () => {
     if (!selectedDate || !selectedTime) {

@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import API from "../services/api";
 
 const CATEGORIES = [
   { name: "Blood Test", icon: "🩸", price: "₹80" },
@@ -24,11 +25,15 @@ const STEPS = [
   { step: "03", title: "Book Instantly", desc: "Confirm in seconds", icon: "📅", color: "bg-purple-50 text-purple-600" },
 ];
 
+const CITIES = ["Dehradun", "Delhi", "Mumbai", "Saharanpur", "Haridwar", "Mussoorie"];
+
 export default function Landing() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState(null);
   const [scrollY, setScrollY] = useState(0);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [allTests, setAllTests] = useState([]);
 
   useEffect(() => {
     const fn = () => setScrollY(window.scrollY);
@@ -36,9 +41,29 @@ export default function Landing() {
     return () => window.removeEventListener("scroll", fn);
   }, []);
 
+  useEffect(() => {
+    API.get("/tests").then(res => setAllTests(res.data)).catch(() => {});
+  }, []);
+
+  const suggestions = useMemo(() => {
+    if (!search.trim()) return [];
+
+    const q = search.toLowerCase();
+    const testMatches = allTests
+      .filter(t => t.name?.toLowerCase().includes(q))
+      .slice(0, 4)
+      .map(t => ({ type: "test", label: t.name, icon: "🔬" }));
+    const cityMatches = CITIES
+      .filter(c => c.toLowerCase().includes(q))
+      .slice(0, 3)
+      .map(c => ({ type: "city", label: c, icon: "📍" }));
+
+    return [...testMatches, ...cityMatches];
+  }, [search, allTests]);
+
   const handleSearch = (e) => {
     e.preventDefault();
-    navigate(`/hospitals?search=${search}`);
+    navigate(`/hospitals?search=${encodeURIComponent(search.trim())}`);
   };
 
   return (
@@ -93,30 +118,64 @@ export default function Landing() {
           </motion.p>
 
           {/* Search */}
-          <motion.form
+          <motion.div
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.25 }}
-            onSubmit={handleSearch}
-            className="flex gap-2 bg-white rounded-2xl shadow-lg p-1.5 border border-gray-100 mb-5"
+            className="relative mb-5"
           >
-            <div className="flex items-center gap-2 flex-1 px-3">
-              <span className="text-gray-400 text-base shrink-0">🔍</span>
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search MRI, Blood Test, X-Ray..."
-                className="flex-1 outline-none text-gray-700 text-sm bg-transparent placeholder-gray-400 min-w-0"
-              />
-            </div>
-            <button
-              type="submit"
-              className="bg-gradient-to-r from-teal-500 to-blue-500 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:opacity-90 transition shrink-0"
+            <form
+              onSubmit={handleSearch}
+              className="flex gap-2 bg-white rounded-2xl shadow-lg p-1.5 border border-gray-100"
             >
-              Search
-            </button>
-          </motion.form>
+              <div className="flex items-center gap-2 flex-1 px-3">
+                <span className="text-gray-400 text-base shrink-0">🔍</span>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                  placeholder="Search MRI, Blood Test, X-Ray..."
+                  className="flex-1 outline-none text-gray-700 text-sm bg-transparent placeholder-gray-400 min-w-0"
+                />
+              </div>
+              <button
+                type="submit"
+                className="bg-gradient-to-r from-teal-500 to-blue-500 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:opacity-90 transition shrink-0"
+              >
+                Search
+              </button>
+            </form>
+
+            {/* Suggestions dropdown */}
+            <AnimatePresence>
+              {showSuggestions && suggestions.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-30"
+                >
+                  {suggestions.map((s, i) => (
+                    <button
+                      key={i}
+                      onMouseDown={() => {
+                        setSearch(s.label);
+                        setShowSuggestions(false);
+                        navigate(`/hospitals?search=${encodeURIComponent(s.label)}`);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition text-left border-b border-gray-50 last:border-0"
+                    >
+                      <span className="text-base">{s.icon}</span>
+                      <span className="text-sm text-gray-700">{s.label}</span>
+                      <span className="text-xs text-gray-300 ml-auto">{s.type === "test" ? "Test" : "City"}</span>
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
 
           {/* Category chips — horizontal scroll */}
           <motion.div
@@ -129,7 +188,7 @@ export default function Landing() {
             {CATEGORIES.map((c) => (
               <button
                 key={c.name}
-                onClick={() => { setActiveCategory(c.name); navigate(`/hospitals?search=${c.name}`); }}
+                onClick={() => { setActiveCategory(c.name); navigate(`/hospitals?search=${encodeURIComponent(c.name)}`); }}
                 style={{ scrollSnapAlign: "start" }}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border whitespace-nowrap shrink-0 transition ${
                   activeCategory === c.name

@@ -66,6 +66,9 @@ psql postgres -c "CREATE DATABASE medcompare;"
 # Run migrations
 cd backend
 npx prisma migrate dev
+
+# Add demo hospitals, tests and prices
+npm run seed
 ```
 
 ## Environment Variables

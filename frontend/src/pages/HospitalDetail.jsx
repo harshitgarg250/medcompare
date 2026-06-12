@@ -45,8 +45,12 @@ function HospitalDetail() {
     navigate(`/booking/${hospital.id}?testId=${selectedTest.testId}&price=${selectedTest.price}`)
   }
 
+  const startingPrice = hospital?.tests?.length
+    ? Math.min(...hospital.tests.map((t) => t.price))
+    : null
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-24 md:pb-0">
 
       {/* HEADER */}
       <div className="bg-white border-b border-gray-100 px-4 py-4">
@@ -66,6 +70,7 @@ function HospitalDetail() {
               {hospital.isOpen ? '🟢 Open Now' : '🔴 Closed'}
             </span>
             <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-lg text-xs font-bold">📍 {hospital.city}</span>
+            <span className="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-lg text-xs font-bold">✓ Verified Partner</span>
           </div>
         </div>
       </div>
@@ -83,7 +88,7 @@ function HospitalDetail() {
           onClick={handleBook}
           className="bg-gradient-to-r from-teal-500 to-blue-500 text-white px-5 py-3 rounded-xl font-bold text-sm hover:opacity-90 transition shadow-lg w-full"
         >
-          📅 Book Appointment
+          Book Test
         </motion.button>
       </div>
     </div>
@@ -98,8 +103,17 @@ function HospitalDetail() {
           {/* TESTS & PRICING */}
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="font-bold text-gray-800">Tests & Pricing</h2>
-              <p className="text-xs text-gray-400 mt-1">Select a test to book</p>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="font-bold text-gray-800">Tests & Pricing</h2>
+                  <p className="text-xs text-gray-400 mt-1">Select a test to book. Prices shown include partner-listed test charges.</p>
+                </div>
+                {startingPrice && (
+                  <div className="rounded-xl bg-teal-50 px-3 py-2 text-sm font-extrabold text-teal-700">
+                    From ₹{startingPrice}
+                  </div>
+                )}
+              </div>
             </div>
             <div className="divide-y divide-gray-50">
               {hospital.tests?.map((t) => (
@@ -118,6 +132,7 @@ function HospitalDetail() {
                     <div className="text-xs text-gray-400 mt-1">
                       ⏱ {t.duration} &nbsp;·&nbsp; 📋 Report in {t.reportTime}
                     </div>
+                    <div className="mt-1 text-xs font-medium text-emerald-600">No hidden charges · Secure booking</div>
                   </div>
                   <div className="text-right">
                     <div className="text-teal-600 font-extrabold text-lg">₹{t.price}</div>
@@ -198,7 +213,7 @@ function HospitalDetail() {
           <div className="bg-white rounded-2xl border border-gray-100 p-5">
             <h3 className="font-bold text-gray-800 mb-4">Highlights</h3>
             <div className="flex flex-wrap gap-2">
-              {['NABL Accredited', 'Home Collection', 'Same Day Reports', 'Online Booking'].map(b => (
+              {['Verified Partner', 'Transparent Pricing', 'Secure Booking', 'Same Day Reports', 'Online Booking'].map(b => (
                 <span key={b} className="bg-teal-50 text-teal-700 px-3 py-1 rounded-full text-xs font-medium">
                   ✓ {b}
                 </span>
@@ -223,6 +238,26 @@ function HospitalDetail() {
             </a>
           </div>
 
+        </div>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-100 bg-white p-3 shadow-2xl md:hidden">
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-sm font-bold text-gray-800">
+              {selectedTest ? selectedTest.test?.name : 'Select a test'}
+            </div>
+            <div className="text-xs text-gray-400">
+              {selectedTest ? `₹${selectedTest.price} · Report in ${selectedTest.reportTime}` : `Tests from ₹${startingPrice || 'N/A'}`}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleBook}
+            className="rounded-xl bg-teal-600 px-5 py-3 text-sm font-bold text-white shadow-lg"
+          >
+            Book
+          </button>
         </div>
       </div>
     </div>

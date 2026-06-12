@@ -23,7 +23,7 @@ function MyBookings() {
       await API.patch(`/bookings/${id}/cancel`)
       toast.success('Booking cancelled!')
       refetch()
-    } catch (err) {
+    } catch {
       toast.error('Could not cancel booking')
     }
   }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -7,6 +7,131 @@ import API from "../services/api";
 import HospitalsMap from "../components/HospitalsMap";
 
 const FILTERS = ["All", "Nearest", "Top Rated", "Lowest Price", "Open Now"];
+const TRUST_POINTS = ["Verified partners", "Transparent prices", "Secure booking", "No hidden charges"];
+const FALLBACK_TESTS = [
+  "Blood Test",
+  "MRI Scan",
+  "X-Ray",
+  "CT Scan",
+  "ECG",
+  "Ultrasound",
+];
+const FALLBACK_HOSPITALS = [
+  {
+    id: "fallback-city",
+    name: "City Hospital",
+    type: "Diagnostic Center",
+    address: "Rajpur Road",
+    city: "Dehradun",
+    lat: 30.3256,
+    lng: 78.0437,
+    rating: 4.5,
+    isOpen: true,
+    distance: 1.8,
+    reviewCount: 238,
+    verified: true,
+    tests: [
+      { id: "city-blood", price: 80, duration: "15 min", reportTime: "24 hrs", test: { name: "Blood Test" } },
+      { id: "city-mri", price: 2500, duration: "45 min", reportTime: "Same day", test: { name: "MRI Scan" } },
+      { id: "city-xray", price: 200, duration: "10 min", reportTime: "2 hrs", test: { name: "X-Ray" } },
+    ],
+  },
+  {
+    id: "fallback-kailash",
+    name: "Kailash Hospital",
+    type: "Multi-speciality Hospital",
+    address: "Haridwar Road",
+    city: "Dehradun",
+    lat: 30.3008,
+    lng: 78.0461,
+    rating: 4.3,
+    isOpen: true,
+    distance: 2.4,
+    reviewCount: 184,
+    verified: true,
+    tests: [
+      { id: "kailash-blood", price: 90, duration: "15 min", reportTime: "24 hrs", test: { name: "Blood Test" } },
+      { id: "kailash-ct", price: 1500, duration: "30 min", reportTime: "Same day", test: { name: "CT Scan" } },
+      { id: "kailash-ecg", price: 150, duration: "10 min", reportTime: "30 min", test: { name: "ECG" } },
+    ],
+  },
+  {
+    id: "fallback-synergy",
+    name: "Synergy Hospital",
+    type: "Hospital",
+    address: "Ballupur Road",
+    city: "Dehradun",
+    lat: 30.3346,
+    lng: 78.0108,
+    rating: 4.6,
+    isOpen: true,
+    distance: 3.1,
+    reviewCount: 312,
+    verified: true,
+    tests: [
+      { id: "synergy-blood", price: 100, duration: "15 min", reportTime: "24 hrs", test: { name: "Blood Test" } },
+      { id: "synergy-mri", price: 2800, duration: "45 min", reportTime: "Same day", test: { name: "MRI Scan" } },
+      { id: "synergy-ultra", price: 400, duration: "20 min", reportTime: "4 hrs", test: { name: "Ultrasound" } },
+    ],
+  },
+  {
+    id: "fallback-velmed",
+    name: "Velmed Hospital",
+    type: "Hospital",
+    address: "Turner Road",
+    city: "Dehradun",
+    lat: 30.2866,
+    lng: 78.0078,
+    rating: 4.2,
+    isOpen: false,
+    distance: 4.2,
+    reviewCount: 96,
+    verified: true,
+    tests: [
+      { id: "velmed-xray", price: 220, duration: "10 min", reportTime: "2 hrs", test: { name: "X-Ray" } },
+      { id: "velmed-ct", price: 1600, duration: "30 min", reportTime: "Same day", test: { name: "CT Scan" } },
+      { id: "velmed-ecg", price: 180, duration: "10 min", reportTime: "30 min", test: { name: "ECG" } },
+    ],
+  },
+  {
+    id: "fallback-apollo",
+    name: "Apollo Hospital",
+    type: "Hospital",
+    address: "Sarita Vihar",
+    city: "Delhi",
+    lat: 28.5363,
+    lng: 77.2839,
+    rating: 4.7,
+    isOpen: true,
+    distance: 210,
+    reviewCount: 1240,
+    verified: true,
+    tests: [
+      { id: "apollo-blood", price: 120, duration: "15 min", reportTime: "24 hrs", test: { name: "Blood Test" } },
+      { id: "apollo-mri", price: 3200, duration: "45 min", reportTime: "Same day", test: { name: "MRI Scan" } },
+      { id: "apollo-ultra", price: 550, duration: "20 min", reportTime: "4 hrs", test: { name: "Ultrasound" } },
+    ],
+  },
+  {
+    id: "fallback-max",
+    name: "Max Hospital",
+    type: "Hospital",
+    address: "Saket",
+    city: "Delhi",
+    lat: 28.5276,
+    lng: 77.213,
+    rating: 4.5,
+    isOpen: true,
+    distance: 214,
+    reviewCount: 890,
+    verified: true,
+    tests: [
+      { id: "max-blood", price: 110, duration: "15 min", reportTime: "24 hrs", test: { name: "Blood Test" } },
+      { id: "max-ct", price: 1900, duration: "30 min", reportTime: "Same day", test: { name: "CT Scan" } },
+      { id: "max-xray", price: 250, duration: "10 min", reportTime: "2 hrs", test: { name: "X-Ray" } },
+    ],
+  },
+];
 
 export default function Hospitals() {
   const [searchParams] = useSearchParams();
@@ -19,18 +144,27 @@ export default function Hospitals() {
   const [selectedHospital, setSelectedHospital] = useState(null);
   const [showMap, setShowMap] = useState(false);
   const [manualLocation, setManualLocation] = useState("");
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  const [locationSuggestions, setLocationSuggestions] = useState([]);
+  const [locationSuggestLoading, setLocationSuggestLoading] = useState(false);
 
-  const handleManualLocation = async () => {
-    if (!manualLocation.trim()) return;
+  const applyLocation = (place) => {
+    setManualLocation(place.display_name);
+    setUserLocation({ lat: parseFloat(place.lat), lng: parseFloat(place.lon) });
+    setShowLocationSuggestions(false);
+    toast.success(`📍 ${place.display_name.split(",")[0]}`);
+  };
+
+  const handleManualLocation = async (location = manualLocation) => {
+    if (!location.trim()) return;
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(manualLocation)}&format=json&limit=1`
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(location)}&format=json&limit=1`
       );
       const data = await res.json();
       if (data.length > 0) {
-        const { lat, lon } = data[0];
-        setUserLocation({ lat: parseFloat(lat), lng: parseFloat(lon) });
-        toast.success(`📍 ${data[0].display_name.split(",")[0]}`);
+        applyLocation(data[0]);
       } else {
         toast.error("Location not found");
       }
@@ -61,12 +195,121 @@ export default function Hospitals() {
     enabled: !locationLoading,
   });
 
-  const filtered = hospitals
+  const { data: suggestionHospitals = [], isLoading: suggestionsLoading } = useQuery({
+    queryKey: ["hospital-search-suggestions"],
+    queryFn: () => API.get("/hospitals").then((r) => r.data),
+  });
+
+  const { data: suggestionTests = [] } = useQuery({
+    queryKey: ["test-search-suggestions"],
+    queryFn: () => API.get("/tests").then((r) => r.data),
+  });
+
+  const searchSuggestions = useMemo(() => {
+    if (!search.trim()) return [];
+
+    const q = search.toLowerCase();
+    const matches = [];
+    const seen = new Set();
+
+    const hospitalSources = [
+      ...(hospitals || []),
+      ...suggestionHospitals,
+      ...FALLBACK_HOSPITALS,
+    ];
+
+    hospitalSources.forEach((hospital) => {
+      if (hospital.name?.toLowerCase().includes(q)) {
+        const key = `hospital-${hospital.id || hospital.name.toLowerCase()}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          matches.push({
+            type: "hospital",
+            label: hospital.name,
+            detail: hospital.address || hospital.city || "Hospital",
+            icon: "🏥",
+          });
+        }
+      }
+    });
+
+    suggestionTests.forEach((test) => {
+      if (test.name?.toLowerCase().includes(q)) {
+        const key = `test-${test.name.toLowerCase()}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          matches.push({
+            type: "test",
+            label: test.name,
+            detail: test.category || "Medical test",
+            icon: "🔬",
+          });
+        }
+      }
+    });
+
+    FALLBACK_TESTS.forEach((testName) => {
+      if (testName.toLowerCase().includes(q)) {
+        const key = `test-${testName.toLowerCase()}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          matches.push({
+            type: "test",
+            label: testName,
+            detail: "Common medical test",
+            icon: "🔬",
+          });
+        }
+      }
+    });
+
+    return matches.slice(0, 8);
+  }, [hospitals, search, suggestionHospitals, suggestionTests]);
+
+  const displayHospitals = useMemo(() => {
+    if (hospitals?.length > 0) return hospitals;
+    if (suggestionHospitals.length > 0) return suggestionHospitals;
+    return FALLBACK_HOSPITALS;
+  }, [hospitals, suggestionHospitals]);
+
+  const isDemoData = !hospitals?.length && !suggestionHospitals.length;
+  const selectedTestName = search.trim();
+  const getMatchingTest = (hospital) =>
+    hospital.tests?.find((t) => t.test?.name?.toLowerCase() === selectedTestName.toLowerCase()) ||
+    hospital.tests?.find((t) => t.test?.name?.toLowerCase().includes(selectedTestName.toLowerCase())) ||
+    hospital.tests?.[0];
+  const getMinPrice = (hospital) =>
+    hospital.tests?.length > 0 ? Math.min(...hospital.tests.map((t) => t.price)) : null;
+
+  useEffect(() => {
+    const q = manualLocation.trim();
+    if (q.length < 2) return;
+
+    const timeoutId = setTimeout(async () => {
+      setLocationSuggestLoading(true);
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=5`
+        );
+        const data = await res.json();
+        setLocationSuggestions(data || []);
+        setShowLocationSuggestions(true);
+      } catch {
+        setLocationSuggestions([]);
+      } finally {
+        setLocationSuggestLoading(false);
+      }
+    }, 350);
+
+    return () => clearTimeout(timeoutId);
+  }, [manualLocation]);
+
+  const filtered = displayHospitals
     ?.filter((h) => {
       if (!search) return true;
       return (
-        h.name.toLowerCase().includes(search.toLowerCase()) ||
-        h.tests?.some((t) => t.test?.name.toLowerCase().includes(search.toLowerCase()))
+	        h.name.toLowerCase().includes(search.toLowerCase()) ||
+	        h.tests?.some((t) => t.test?.name?.toLowerCase().includes(search.toLowerCase()))
       );
     })
     ?.filter((h) => {
@@ -95,19 +338,60 @@ export default function Hospitals() {
 
           {/* Search + Location row */}
           <div className="flex gap-2 mb-2">
-            <div className="flex-1 flex items-center gap-2 bg-gray-100 rounded-xl px-3 py-2">
-              <span className="text-gray-400 text-sm shrink-0">🔍</span>
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search hospital or test..."
-                className="bg-transparent outline-none text-sm text-gray-700 w-full placeholder-gray-400"
-              />
-              {search && (
-                <button onClick={() => setSearch("")} className="text-gray-400 text-xs shrink-0">✕</button>
-              )}
-            </div>
+	            <div className="flex-1 relative">
+	              <div className="flex items-center gap-2 bg-gray-100 rounded-xl px-3 py-2">
+	                <span className="text-gray-400 text-sm shrink-0">🔍</span>
+	                <input
+	                  type="text"
+	                  value={search}
+	                  onChange={(e) => {
+	                    setSearch(e.target.value);
+	                    setShowSearchSuggestions(true);
+	                  }}
+	                  onFocus={() => setShowSearchSuggestions(true)}
+	                  onBlur={() => setTimeout(() => setShowSearchSuggestions(false), 150)}
+	                  placeholder="Search hospital or test..."
+	                  className="bg-transparent outline-none text-sm text-gray-700 w-full placeholder-gray-400"
+	                />
+	                {search && (
+	                  <button onClick={() => setSearch("")} className="text-gray-400 text-xs shrink-0">✕</button>
+	                )}
+	              </div>
+
+	              <AnimatePresence>
+	                {showSearchSuggestions && search.trim().length > 0 && (searchSuggestions.length > 0 || suggestionsLoading) && (
+	                  <motion.div
+	                    initial={{ opacity: 0, y: -6 }}
+	                    animate={{ opacity: 1, y: 0 }}
+	                    exit={{ opacity: 0, y: -6 }}
+	                    className="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl border border-gray-100 shadow-xl overflow-hidden z-40"
+	                  >
+	                    {suggestionsLoading ? (
+	                      <div className="px-3 py-2.5 text-xs text-gray-400">Searching...</div>
+	                    ) : (
+	                      searchSuggestions.map((item) => (
+	                        <button
+	                          key={`${item.type}-${item.label}`}
+	                          type="button"
+	                          onMouseDown={() => {
+	                            setSearch(item.label);
+	                            setShowSearchSuggestions(false);
+	                          }}
+	                          className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-gray-50 border-b border-gray-50 last:border-0"
+	                        >
+	                          <span className="text-base shrink-0">{item.icon}</span>
+	                          <span className="min-w-0 flex-1">
+	                            <span className="block text-sm font-semibold text-gray-700 truncate">{item.label}</span>
+	                            <span className="block text-xs text-gray-400 truncate">{item.detail}</span>
+	                          </span>
+	                          <span className="text-xs text-gray-300 capitalize">{item.type}</span>
+	                        </button>
+	                      ))
+	                    )}
+	                  </motion.div>
+	                )}
+	              </AnimatePresence>
+	            </div>
             <button
               onClick={() => setShowMap(!showMap)}
               className={`px-3 py-2 rounded-xl text-xs font-semibold border transition shrink-0 ${
@@ -120,18 +404,52 @@ export default function Hospitals() {
 
           {/* Location search */}
           <div className="flex gap-2 mb-2">
-            <div className="flex-1 flex items-center gap-2 bg-blue-50 rounded-xl px-3 py-1.5 border border-blue-100">
-              <span className="text-blue-400 text-xs shrink-0">📍</span>
-              <input
-                type="text"
-                value={manualLocation}
-                onChange={(e) => setManualLocation(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleManualLocation()}
-                placeholder="Enter city or area..."
-                className="bg-transparent outline-none text-xs text-blue-700 w-full placeholder-blue-300"
-              />
-              <button onClick={handleManualLocation} className="text-blue-500 text-xs font-bold shrink-0">Go</button>
-            </div>
+	            <div className="flex-1 relative">
+	              <div className="flex items-center gap-2 bg-blue-50 rounded-xl px-3 py-1.5 border border-blue-100">
+	                <span className="text-blue-400 text-xs shrink-0">📍</span>
+	                <input
+	                  type="text"
+	                  value={manualLocation}
+	                  onChange={(e) => {
+	                    setManualLocation(e.target.value);
+	                    setShowLocationSuggestions(true);
+	                  }}
+	                  onFocus={() => setShowLocationSuggestions(true)}
+	                  onBlur={() => setTimeout(() => setShowLocationSuggestions(false), 150)}
+	                  onKeyDown={(e) => e.key === "Enter" && handleManualLocation()}
+	                  placeholder="Enter city or area..."
+	                  className="bg-transparent outline-none text-xs text-blue-700 w-full placeholder-blue-300"
+	                />
+	                <button onClick={() => handleManualLocation()} className="text-blue-500 text-xs font-bold shrink-0">Go</button>
+	              </div>
+
+	              <AnimatePresence>
+	                {showLocationSuggestions && manualLocation.trim().length >= 2 && (locationSuggestions.length > 0 || locationSuggestLoading) && (
+	                  <motion.div
+	                    initial={{ opacity: 0, y: -6 }}
+	                    animate={{ opacity: 1, y: 0 }}
+	                    exit={{ opacity: 0, y: -6 }}
+	                    className="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl border border-blue-100 shadow-xl overflow-hidden z-40"
+	                  >
+	                    {locationSuggestLoading ? (
+	                      <div className="px-3 py-2.5 text-xs text-gray-400">Searching...</div>
+	                    ) : (
+	                      locationSuggestions.map((place) => (
+	                        <button
+	                          key={place.place_id}
+	                          type="button"
+	                          onMouseDown={() => applyLocation(place)}
+	                          className="w-full flex items-start gap-2 px-3 py-2.5 text-left hover:bg-blue-50 border-b border-gray-50 last:border-0"
+	                        >
+	                          <span className="text-sm shrink-0">📍</span>
+	                          <span className="text-xs text-gray-600 leading-snug">{place.display_name}</span>
+	                        </button>
+	                      ))
+	                    )}
+	                  </motion.div>
+	                )}
+	              </AnimatePresence>
+	            </div>
             <div className="flex items-center gap-1 text-xs text-gray-400 shrink-0">
               {locationLoading ? (
                 <span className="animate-pulse">Detecting...</span>
@@ -160,6 +478,14 @@ export default function Hospitals() {
               >
                 {f}
               </button>
+            ))}
+          </div>
+
+          <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+            {TRUST_POINTS.map((point) => (
+              <span key={point} className="shrink-0 rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700">
+                ✓ {point}
+              </span>
             ))}
           </div>
         </div>
@@ -218,10 +544,15 @@ export default function Hospitals() {
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => navigate(`/hospitals/${selectedHospital.id}`)}
+                    onClick={() => {
+                      if (typeof selectedHospital.id === "number") {
+                        navigate(`/hospitals/${selectedHospital.id}`);
+                      }
+                    }}
+                    disabled={typeof selectedHospital.id !== "number"}
                     className="flex-1 bg-gradient-to-r from-teal-500 to-blue-500 text-white py-2.5 rounded-xl text-xs font-bold"
                   >
-                    View & Book →
+                    {typeof selectedHospital.id === "number" ? "View & Book →" : "Demo hospital"}
                   </button>
                   <a
                     href={`https://www.google.com/maps/dir/?api=1&destination=${selectedHospital.lat},${selectedHospital.lng}`}
@@ -258,15 +589,26 @@ export default function Hospitals() {
 
         {/* Results count */}
         {!isLoading && !locationLoading && (
-          <div className="flex justify-between items-center mb-3">
-            <div className="text-sm text-gray-500">
-              <span className="font-semibold text-gray-700">{filtered?.length}</span> hospitals
-              {search && <span> for "<strong>{search}</strong>"</span>}
+          <div className="mb-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="text-lg font-extrabold text-gray-800">
+                  {filtered?.length || 0} verified options
+                  {search && <span> for {search}</span>}
+                </div>
+                <p className="text-xs text-gray-400 mt-1">
+                  Compare price, distance, rating and report time before booking.
+                </p>
+              </div>
+              <div className="text-xs font-semibold text-teal-700 bg-teal-50 px-3 py-2 rounded-xl">
+                Best value sorted first
+              </div>
             </div>
-            <div className="text-xs text-gray-400 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-              Best value first
-            </div>
+            {isDemoData && (
+              <div className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700">
+                Demo results are showing because live hospital API data is unavailable.
+              </div>
+            )}
           </div>
         )}
 
@@ -274,94 +616,114 @@ export default function Hospitals() {
         {!isLoading && !locationLoading && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {filtered?.map((hospital, index) => (
-              <motion.div
+              <motion.article
                 key={hospital.id}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.04 }}
-                onClick={() => navigate(`/hospitals/${hospital.id}`)}
-                className="bg-white rounded-2xl border border-gray-100 p-4 hover:shadow-lg hover:border-teal-200 transition cursor-pointer group relative"
+                className="relative rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition hover:border-teal-200 hover:shadow-lg"
               >
-                {/* Best Value badge */}
                 {index === 0 && activeFilter === "All" && (
                   <div className="absolute -top-2.5 left-3">
-                    <span className="bg-gradient-to-r from-teal-500 to-blue-500 text-white px-2.5 py-0.5 rounded-full text-xs font-bold shadow-sm">
-                      🏆 Best Value
+                    <span className="rounded-full bg-teal-600 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
+                      Best value
                     </span>
                   </div>
                 )}
 
-                {/* Header */}
-                <div className="flex justify-between items-start mb-3 mt-1">
-                  <div className="flex gap-2.5 items-center">
-                    <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center text-xl shrink-0">
-                      🏥
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-800 text-sm group-hover:text-teal-600 transition leading-tight">
+                <div className="mb-3 flex items-start justify-between gap-3 mt-1">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="truncate text-base font-extrabold text-gray-850 text-gray-800">
                         {hospital.name}
                       </h3>
-                      <p className="text-xs text-gray-400 mt-0.5">{hospital.type}</p>
+                      <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
+                        Verified
+                      </span>
                     </div>
+                    <p className="mt-1 text-xs text-gray-400">{hospital.type} · {hospital.address}</p>
                   </div>
-                  <div className="bg-amber-50 text-amber-600 px-2 py-1 rounded-lg text-xs font-bold shrink-0">
-                    ⭐ {hospital.rating || "New"}
+                  <div className="shrink-0 rounded-xl bg-amber-50 px-2 py-1 text-xs font-bold text-amber-600">
+                    {hospital.rating || "New"} ★
                   </div>
                 </div>
 
-                {/* Address */}
-                <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
-                  <span>📍</span> {hospital.address}
-                </p>
-
-                {/* Badges */}
-                <div className="flex gap-2 mb-3 flex-wrap">
-                  {hospital.distance !== undefined && (
-                    <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-lg text-xs font-medium">
-                      📏 {hospital.distance} km
-                    </span>
-                  )}
-                  <span className={`px-2 py-1 rounded-lg text-xs font-medium ${hospital.isOpen ? "bg-green-50 text-green-600" : "bg-red-50 text-red-500"}`}>
-                    {hospital.isOpen ? "🟢 Open" : "🔴 Closed"}
-                  </span>
+                <div className="mb-4 grid grid-cols-3 gap-2">
+                  <div className="rounded-xl bg-gray-50 p-2">
+                    <div className="text-[11px] text-gray-400">From</div>
+                    <div className="text-lg font-extrabold text-teal-600">₹{getMinPrice(hospital) || "N/A"}</div>
+                  </div>
+                  <div className="rounded-xl bg-gray-50 p-2">
+                    <div className="text-[11px] text-gray-400">Distance</div>
+                    <div className="text-sm font-bold text-gray-700">{hospital.distance ?? "--"} km</div>
+                  </div>
+                  <div className="rounded-xl bg-gray-50 p-2">
+                    <div className="text-[11px] text-gray-400">Reports</div>
+                    <div className="text-sm font-bold text-gray-700">{getMatchingTest(hospital)?.reportTime || "24 hrs"}</div>
+                  </div>
                 </div>
 
-                {/* Tests */}
-                <div className="flex flex-wrap gap-1.5 mb-3">
+                <div className="mb-3 flex flex-wrap gap-1.5">
                   {hospital.tests?.slice(0, 3).map((t) => (
-                    <span key={t.id} className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-lg text-xs">
-                      {t.test?.name}
+                    <span key={t.id} className="rounded-lg bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
+                      {t.test?.name} · ₹{t.price}
                     </span>
                   ))}
-                  {hospital.tests?.length > 3 && (
-                    <span className="bg-gray-100 text-gray-400 px-2 py-0.5 rounded-lg text-xs">
-                      +{hospital.tests.length - 3}
-                    </span>
-                  )}
                 </div>
 
-                {/* Footer */}
-                <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-                  <div className="text-xs text-gray-400">
-                    From <span className="text-teal-600 font-bold text-sm ml-0.5">
-                      ₹{hospital.tests?.length > 0 ? Math.min(...hospital.tests.map((t) => t.price)) : "N/A"}
-                    </span>
-                  </div>
-                  <button className="bg-teal-600 text-white px-3 py-1.5 rounded-xl text-xs font-semibold hover:bg-teal-700 transition">
-                    View →
+                <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                  <span>{hospital.reviewCount || hospital.reviews?.length || 0} reviews</span>
+                  <span className={hospital.isOpen ? "font-semibold text-emerald-600" : "font-semibold text-red-500"}>
+                    {hospital.isOpen ? "Open now" : "Closed"}
+                  </span>
+                  <span>No hidden charges</span>
+                </div>
+
+                <div className="flex gap-2 border-t border-gray-100 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedHospital(hospital)}
+                    className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-xs font-bold text-gray-600 transition hover:border-teal-300 hover:text-teal-700"
+                  >
+                    Compare
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (typeof hospital.id === "number") {
+                        navigate(`/hospitals/${hospital.id}`);
+                      } else {
+                        setSelectedHospital(hospital);
+                      }
+                    }}
+                    className="flex-1 rounded-xl bg-teal-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-teal-700"
+                  >
+                    {typeof hospital.id === "number" ? "Book Test" : "View Details"}
                   </button>
                 </div>
-              </motion.div>
+              </motion.article>
             ))}
           </div>
         )}
 
         {/* Empty state */}
         {!isLoading && !locationLoading && filtered?.length === 0 && (
-          <div className="text-center py-16">
+          <div className="rounded-2xl border border-gray-100 bg-white px-6 py-12 text-center">
             <div className="text-4xl mb-3">🔍</div>
-            <h3 className="font-bold text-gray-700 mb-1">No hospitals found</h3>
-            <p className="text-gray-400 text-sm">Try searching with a different term</p>
+            <h3 className="font-bold text-gray-700 mb-1">No matching hospitals found</h3>
+            <p className="text-gray-400 text-sm mb-4">Try a popular test or clear filters to see more options.</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {FALLBACK_TESTS.slice(0, 4).map((test) => (
+                <button
+                  key={test}
+                  type="button"
+                  onClick={() => setSearch(test)}
+                  className="rounded-full bg-teal-50 px-3 py-1.5 text-xs font-bold text-teal-700"
+                >
+                  {test}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>
