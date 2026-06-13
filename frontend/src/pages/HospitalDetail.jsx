@@ -6,6 +6,12 @@ import toast from 'react-hot-toast'
 import API from '../services/api'
 import useAuthStore from '../store/authStore'
 
+const DETAIL_IMAGES = [
+  'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=900&q=75',
+  'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=900&q=75',
+  'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=900&q=75',
+]
+
 function HospitalDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -48,19 +54,26 @@ function HospitalDetail() {
   const startingPrice = hospital?.tests?.length
     ? Math.min(...hospital.tests.map((t) => t.price))
     : null
+  const detailImage = DETAIL_IMAGES[Number(id) % DETAIL_IMAGES.length]
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24 md:pb-0">
 
       {/* HEADER */}
       <div className="bg-white border-b border-gray-100 px-4 py-4">
-  <div className="max-w-5xl mx-auto">
+  <div className="mx-auto max-w-6xl">
     <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-teal-600 text-sm mb-3 flex items-center gap-1">
       ← Back to results
     </button>
+    <img
+      src={detailImage}
+      alt={`${hospital.name} facility`}
+      className="mb-4 h-44 w-full rounded-2xl object-cover"
+      loading="lazy"
+    />
     <div className="flex flex-col sm:flex-row justify-between gap-4">
       <div className="flex gap-3 items-start">
-        <div className="w-12 h-12 bg-teal-50 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">🏥</div>
+        <img src={detailImage} alt="" className="w-12 h-12 rounded-xl object-cover flex-shrink-0" loading="lazy" />
         <div>
           <h1 className="text-xl font-extrabold text-gray-800 mb-1">{hospital.name}</h1>
           <p className="text-gray-400 text-xs mb-2">{hospital.type}</p>
@@ -95,7 +108,7 @@ function HospitalDetail() {
   </div>
 </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 sm:px-6 md:grid-cols-3 lg:px-8 lg:py-8">
 
         {/* LEFT — Tests */}
         <div className="md:col-span-2 space-y-6">

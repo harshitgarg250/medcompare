@@ -8,6 +8,14 @@ import HospitalsMap from "../components/HospitalsMap";
 
 const FILTERS = ["All", "Nearest", "Top Rated", "Lowest Price", "Open Now"];
 const TRUST_POINTS = ["Verified partners", "Transparent prices", "Secure booking", "No hidden charges"];
+const HOSPITAL_IMAGES = [
+  "https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=640&q=75",
+  "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=640&q=75",
+  "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=640&q=75",
+  "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=640&q=75",
+  "https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=640&q=75",
+  "https://images.unsplash.com/photo-1581595219315-a187dd40c322?auto=format&fit=crop&w=640&q=75",
+];
 const FALLBACK_TESTS = [
   "Blood Test",
   "MRI Scan",
@@ -30,10 +38,11 @@ const FALLBACK_HOSPITALS = [
     distance: 1.8,
     reviewCount: 238,
     verified: true,
+    image: HOSPITAL_IMAGES[0],
     tests: [
-      { id: "city-blood", price: 80, duration: "15 min", reportTime: "24 hrs", test: { name: "Blood Test" } },
-      { id: "city-mri", price: 2500, duration: "45 min", reportTime: "Same day", test: { name: "MRI Scan" } },
-      { id: "city-xray", price: 200, duration: "10 min", reportTime: "2 hrs", test: { name: "X-Ray" } },
+      { id: "city-blood", price: 80, originalPrice: 150, duration: "15 min", reportTime: "24 hrs", test: { name: "Blood Test" } },
+      { id: "city-mri", price: 2500, originalPrice: 4500, duration: "45 min", reportTime: "Same day", test: { name: "MRI Scan" } },
+      { id: "city-xray", price: 200, originalPrice: 350, duration: "10 min", reportTime: "2 hrs", test: { name: "X-Ray" } },
     ],
   },
   {
@@ -49,6 +58,7 @@ const FALLBACK_HOSPITALS = [
     distance: 2.4,
     reviewCount: 184,
     verified: true,
+    image: HOSPITAL_IMAGES[1],
     tests: [
       { id: "kailash-blood", price: 90, duration: "15 min", reportTime: "24 hrs", test: { name: "Blood Test" } },
       { id: "kailash-ct", price: 1500, duration: "30 min", reportTime: "Same day", test: { name: "CT Scan" } },
@@ -68,6 +78,7 @@ const FALLBACK_HOSPITALS = [
     distance: 3.1,
     reviewCount: 312,
     verified: true,
+    image: HOSPITAL_IMAGES[2],
     tests: [
       { id: "synergy-blood", price: 100, duration: "15 min", reportTime: "24 hrs", test: { name: "Blood Test" } },
       { id: "synergy-mri", price: 2800, duration: "45 min", reportTime: "Same day", test: { name: "MRI Scan" } },
@@ -87,6 +98,7 @@ const FALLBACK_HOSPITALS = [
     distance: 4.2,
     reviewCount: 96,
     verified: true,
+    image: HOSPITAL_IMAGES[3],
     tests: [
       { id: "velmed-xray", price: 220, duration: "10 min", reportTime: "2 hrs", test: { name: "X-Ray" } },
       { id: "velmed-ct", price: 1600, duration: "30 min", reportTime: "Same day", test: { name: "CT Scan" } },
@@ -106,6 +118,7 @@ const FALLBACK_HOSPITALS = [
     distance: 210,
     reviewCount: 1240,
     verified: true,
+    image: HOSPITAL_IMAGES[4],
     tests: [
       { id: "apollo-blood", price: 120, duration: "15 min", reportTime: "24 hrs", test: { name: "Blood Test" } },
       { id: "apollo-mri", price: 3200, duration: "45 min", reportTime: "Same day", test: { name: "MRI Scan" } },
@@ -125,6 +138,7 @@ const FALLBACK_HOSPITALS = [
     distance: 214,
     reviewCount: 890,
     verified: true,
+    image: HOSPITAL_IMAGES[5],
     tests: [
       { id: "max-blood", price: 110, duration: "15 min", reportTime: "24 hrs", test: { name: "Blood Test" } },
       { id: "max-ct", price: 1900, duration: "30 min", reportTime: "Same day", test: { name: "CT Scan" } },
@@ -143,11 +157,12 @@ export default function Hospitals() {
   const [locationLoading, setLocationLoading] = useState(true);
   const [selectedHospital, setSelectedHospital] = useState(null);
   const [showMap, setShowMap] = useState(false);
-  const [manualLocation, setManualLocation] = useState("");
+  const [manualLocation, setManualLocation] = useState(searchParams.get("location") || "");
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
   const [locationSuggestions, setLocationSuggestions] = useState([]);
   const [locationSuggestLoading, setLocationSuggestLoading] = useState(false);
+  const [compareHospitals, setCompareHospitals] = useState([]);
 
   const applyLocation = (place) => {
     setManualLocation(place.display_name);
@@ -280,6 +295,34 @@ export default function Hospitals() {
     hospital.tests?.[0];
   const getMinPrice = (hospital) =>
     hospital.tests?.length > 0 ? Math.min(...hospital.tests.map((t) => t.price)) : null;
+  const getHospitalImage = (hospital, index = 0) =>
+    hospital.image || HOSPITAL_IMAGES[index % HOSPITAL_IMAGES.length];
+  const getSavingPercent = (test) => {
+    if (!test?.originalPrice || test.originalPrice <= test.price) return null;
+    return Math.round(((test.originalPrice - test.price) / test.originalPrice) * 100);
+  };
+  const isComparing = (hospital) => compareHospitals.some((item) => item.id === hospital.id);
+  const toggleCompare = (hospital) => {
+    setCompareHospitals((current) => {
+      if (current.some((item) => item.id === hospital.id)) {
+        return current.filter((item) => item.id !== hospital.id);
+      }
+      return [...current, hospital].slice(0, 3);
+    });
+  };
+  const compareRows = [
+    {
+      label: selectedTestName || "Test Price",
+      value: (hospital) => {
+        const test = getMatchingTest(hospital);
+        return test?.price ? `₹${test.price}` : "N/A";
+      },
+    },
+    { label: "Rating", value: (hospital) => hospital.rating ? `${hospital.rating}/5` : "New" },
+    { label: "Distance", value: (hospital) => hospital.distance !== undefined ? `${hospital.distance} km` : "--" },
+    { label: "Reports Time", value: (hospital) => getMatchingTest(hospital)?.reportTime || "24 hrs" },
+    { label: "Home Collection", value: (hospital) => hospital.type?.toLowerCase().includes("diagnostic") ? "Yes" : "No" },
+  ];
 
   useEffect(() => {
     const q = manualLocation.trim();
@@ -334,7 +377,7 @@ export default function Hospitals() {
 
       {/* STICKY HEADER */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-20 shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 pt-3 pb-2">
+        <div className="mx-auto max-w-6xl px-4 pb-2 pt-3 sm:px-6 lg:px-8">
 
           {/* Search + Location row */}
           <div className="flex gap-2 mb-2">
@@ -491,7 +534,7 @@ export default function Hospitals() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-4">
+      <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 lg:px-8">
 
         {/* MAP */}
         <AnimatePresence>
@@ -525,9 +568,20 @@ export default function Hospitals() {
                 <span className="font-bold text-sm text-gray-800">Hospital Details</span>
                 <button onClick={() => setSelectedHospital(null)} className="text-gray-400 text-lg">✕</button>
               </div>
-              <div className="p-4">
+                <div className="p-4">
+                <img
+                  src={getHospitalImage(selectedHospital)}
+                  alt={selectedHospital.name}
+                  className="mb-4 h-36 w-full rounded-xl object-cover"
+                  loading="lazy"
+                />
                 <div className="flex gap-3 mb-3">
-                  <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center text-xl shrink-0">🏥</div>
+                  <img
+                    src={getHospitalImage(selectedHospital)}
+                    alt=""
+                    className="w-10 h-10 rounded-xl object-cover shrink-0"
+                    loading="lazy"
+                  />
                   <div>
                     <div className="font-bold text-gray-800 text-sm">{selectedHospital.name}</div>
                     <div className="text-xs text-gray-400">{selectedHospital.type}</div>
@@ -570,7 +624,7 @@ export default function Hospitals() {
 
         {/* Loading skeletons */}
         {(isLoading || locationLoading) && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="bg-white rounded-2xl p-4 border border-gray-100 animate-pulse">
                 <div className="flex gap-3 mb-3">
@@ -612,10 +666,82 @@ export default function Hospitals() {
           </div>
         )}
 
+        {/* Comparison table */}
+        {!isLoading && !locationLoading && compareHospitals.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 overflow-hidden rounded-2xl border border-teal-100 bg-white shadow-sm"
+          >
+            <div className="flex flex-col gap-2 border-b border-gray-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-base font-extrabold text-gray-800">Hospital Comparison</h2>
+                <p className="text-xs text-gray-400">Compare up to 3 hospitals before booking.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCompareHospitals([])}
+                className="self-start rounded-xl bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-500 hover:bg-gray-200 sm:self-auto"
+              >
+                Clear
+              </button>
+            </div>
+
+            {compareHospitals.length === 1 ? (
+              <div className="px-4 py-3 text-sm text-gray-500">
+                Add one more hospital to see side-by-side comparison.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left text-sm">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="sticky left-0 z-10 bg-gray-50 px-4 py-3 text-xs font-bold uppercase tracking-wide text-gray-400">
+                        Feature
+                      </th>
+                      {compareHospitals.map((hospital) => (
+                        <th key={hospital.id} className="min-w-[150px] px-4 py-3 text-xs font-bold text-gray-700">
+                          <div className="flex items-center gap-2">
+                            <img
+                              src={getHospitalImage(hospital)}
+                              alt=""
+                              className="h-8 w-8 rounded-lg object-cover"
+                              loading="lazy"
+                            />
+                            <span>{hospital.name}</span>
+                          </div>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {compareRows.map((row) => (
+                      <tr key={row.label}>
+                        <td className="sticky left-0 z-10 bg-white px-4 py-3 text-xs font-bold text-gray-500">
+                          {row.label}
+                        </td>
+                        {compareHospitals.map((hospital) => (
+                          <td key={`${hospital.id}-${row.label}`} className="px-4 py-3 font-semibold text-gray-800">
+                            {row.value(hospital)}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </motion.div>
+        )}
+
         {/* Hospital cards */}
         {!isLoading && !locationLoading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {filtered?.map((hospital, index) => (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filtered?.map((hospital, index) => {
+              const matchingTest = getMatchingTest(hospital);
+              const savingPercent = getSavingPercent(matchingTest);
+
+              return (
               <motion.article
                 key={hospital.id}
                 initial={{ opacity: 0, y: 12 }}
@@ -623,6 +749,12 @@ export default function Hospitals() {
                 transition={{ delay: index * 0.04 }}
                 className="relative rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition hover:border-teal-200 hover:shadow-lg"
               >
+                <img
+                  src={getHospitalImage(hospital, index)}
+                  alt={`${hospital.name} facility`}
+                  className="mb-4 h-32 w-full rounded-xl object-cover"
+                  loading="lazy"
+                />
                 {index === 0 && activeFilter === "All" && (
                   <div className="absolute -top-2.5 left-3">
                     <span className="rounded-full bg-teal-600 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
@@ -650,8 +782,16 @@ export default function Hospitals() {
 
                 <div className="mb-4 grid grid-cols-3 gap-2">
                   <div className="rounded-xl bg-gray-50 p-2">
-                    <div className="text-[11px] text-gray-400">From</div>
-                    <div className="text-lg font-extrabold text-teal-600">₹{getMinPrice(hospital) || "N/A"}</div>
+                    <div className="text-[11px] text-gray-400">{matchingTest?.test?.name || "From"}</div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-lg font-extrabold text-teal-600">₹{matchingTest?.price || getMinPrice(hospital) || "N/A"}</span>
+                      {matchingTest?.originalPrice && (
+                        <span className="text-xs font-semibold text-gray-300 line-through">₹{matchingTest.originalPrice}</span>
+                      )}
+                    </div>
+                    {savingPercent && (
+                      <div className="mt-0.5 text-[11px] font-bold text-green-600">Save {savingPercent}%</div>
+                    )}
                   </div>
                   <div className="rounded-xl bg-gray-50 p-2">
                     <div className="text-[11px] text-gray-400">Distance</div>
@@ -682,10 +822,14 @@ export default function Hospitals() {
                 <div className="flex gap-2 border-t border-gray-100 pt-3">
                   <button
                     type="button"
-                    onClick={() => setSelectedHospital(hospital)}
-                    className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-xs font-bold text-gray-600 transition hover:border-teal-300 hover:text-teal-700"
+                    onClick={() => toggleCompare(hospital)}
+                    className={`flex-1 rounded-xl border px-3 py-2 text-xs font-bold transition ${
+                      isComparing(hospital)
+                        ? "border-teal-600 bg-teal-50 text-teal-700"
+                        : "border-gray-200 text-gray-600 hover:border-teal-300 hover:text-teal-700"
+                    }`}
                   >
-                    Compare
+                    {isComparing(hospital) ? "Added" : "Compare"}
                   </button>
                   <button
                     type="button"
@@ -702,7 +846,8 @@ export default function Hospitals() {
                   </button>
                 </div>
               </motion.article>
-            ))}
+              );
+            })}
           </div>
         )}
 
