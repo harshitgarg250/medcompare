@@ -24,6 +24,11 @@ const FALLBACK_TESTS = [
   "ECG",
   "Ultrasound",
 ];
+const STORAGE_KEYS = {
+  savedHospitals: "medcompare_saved_hospitals",
+  searchHistory: "medcompare_search_history",
+  recentTests: "medcompare_recent_tests",
+};
 const FALLBACK_HOSPITALS = [
   {
     id: "fallback-city",
@@ -163,6 +168,27 @@ export default function Hospitals() {
   const [locationSuggestions, setLocationSuggestions] = useState([]);
   const [locationSuggestLoading, setLocationSuggestLoading] = useState(false);
   const [compareHospitals, setCompareHospitals] = useState([]);
+  const [savedHospitals, setSavedHospitals] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.savedHospitals)) || [];
+    } catch {
+      return [];
+    }
+  });
+  const [searchHistory, setSearchHistory] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.searchHistory)) || [];
+    } catch {
+      return [];
+    }
+  });
+  const [recentTests, setRecentTests] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.recentTests)) || [];
+    } catch {
+      return [];
+    }
+  });
 
   const applyLocation = (place) => {
     setManualLocation(place.display_name);
@@ -302,12 +328,32 @@ export default function Hospitals() {
     return Math.round(((test.originalPrice - test.price) / test.originalPrice) * 100);
   };
   const isComparing = (hospital) => compareHospitals.some((item) => item.id === hospital.id);
+  const isSaved = (hospital) => savedHospitals.some((item) => item.id === hospital.id);
   const toggleCompare = (hospital) => {
     setCompareHospitals((current) => {
       if (current.some((item) => item.id === hospital.id)) {
         return current.filter((item) => item.id !== hospital.id);
       }
       return [...current, hospital].slice(0, 3);
+    });
+  };
+  const toggleSave = (hospital) => {
+    setSavedHospitals((current) => {
+      if (current.some((item) => item.id === hospital.id)) {
+        toast.success("Removed from saved hospitals");
+        return current.filter((item) => item.id !== hospital.id);
+      }
+
+      toast.success("Saved hospital");
+      const summary = {
+        id: hospital.id,
+        name: hospital.name,
+        type: hospital.type,
+        city: hospital.city,
+        rating: hospital.rating,
+        distance: hospital.distance,
+      };
+      return [summary, ...current].slice(0, 6);
     });
   };
   const compareRows = [
@@ -346,6 +392,33 @@ export default function Hospitals() {
 
     return () => clearTimeout(timeoutId);
   }, [manualLocation]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.savedHospitals, JSON.stringify(savedHospitals));
+  }, [savedHospitals]);
+
+  useEffect(() => {
+    const q = search.trim();
+    if (q.length < 2) return;
+
+    const timeoutId = setTimeout(() => {
+      setSearchHistory((current) => {
+        const next = [q, ...current.filter((item) => item.toLowerCase() !== q.toLowerCase())].slice(0, 6);
+        localStorage.setItem(STORAGE_KEYS.searchHistory, JSON.stringify(next));
+        return next;
+      });
+
+      if (FALLBACK_TESTS.some((test) => test.toLowerCase() === q.toLowerCase())) {
+        setRecentTests((current) => {
+          const next = [q, ...current.filter((item) => item.toLowerCase() !== q.toLowerCase())].slice(0, 5);
+          localStorage.setItem(STORAGE_KEYS.recentTests, JSON.stringify(next));
+          return next;
+        });
+      }
+    }, 600);
+
+    return () => clearTimeout(timeoutId);
+  }, [search]);
 
   const filtered = displayHospitals
     ?.filter((h) => {
@@ -531,6 +604,31 @@ export default function Hospitals() {
               </span>
             ))}
           </div>
+
+          {(searchHistory.length > 0 || recentTests.length > 0) && (
+            <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+              {recentTests.map((test) => (
+                <button
+                  key={`recent-${test}`}
+                  type="button"
+                  onClick={() => setSearch(test)}
+                  className="shrink-0 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700"
+                >
+                  Recently viewed: {test}
+                </button>
+              ))}
+              {searchHistory.map((item) => (
+                <button
+                  key={`history-${item}`}
+                  type="button"
+                  onClick={() => setSearch(item)}
+                  className="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-semibold text-gray-500 ring-1 ring-gray-200"
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -666,6 +764,49 @@ export default function Hospitals() {
           </div>
         )}
 
+        {!isLoading && !locationLoading && savedHospitals.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 rounded-2xl border border-blue-100 bg-blue-50 p-4"
+          >
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-base font-extrabold text-gray-800">Saved Hospitals</h2>
+                <p className="text-xs text-blue-700">Shortlisted options stay here on this device.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSavedHospitals([])}
+                className="rounded-xl bg-white px-3 py-1.5 text-xs font-bold text-blue-700"
+              >
+                Clear
+              </button>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {savedHospitals.map((hospital) => (
+                <button
+                  key={`saved-${hospital.id}`}
+                  type="button"
+                  onClick={() => {
+                    if (typeof hospital.id === "number") {
+                      navigate(`/hospitals/${hospital.id}`);
+                    }
+                  }}
+                  className="min-w-[220px] rounded-xl bg-white p-3 text-left shadow-sm ring-1 ring-blue-100"
+                >
+                  <div className="truncate text-sm font-extrabold text-gray-800">{hospital.name}</div>
+                  <div className="mt-1 truncate text-xs text-gray-400">{hospital.type} · {hospital.city}</div>
+                  <div className="mt-2 flex items-center justify-between text-xs font-bold">
+                    <span className="text-amber-600">★ {hospital.rating || "New"}</span>
+                    <span className="text-blue-600">{hospital.distance ?? "--"} km</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
         {/* Comparison table */}
         {!isLoading && !locationLoading && compareHospitals.length > 0 && (
           <motion.div
@@ -775,10 +916,10 @@ export default function Hospitals() {
                     </div>
                     <p className="mt-1 text-xs text-gray-400">{hospital.type} · {hospital.address}</p>
                   </div>
-                  <div className="shrink-0 rounded-xl bg-amber-50 px-2 py-1 text-xs font-bold text-amber-600">
-                    {hospital.rating || "New"} ★
-                  </div>
-                </div>
+	                  <div className="shrink-0 rounded-xl bg-amber-50 px-2 py-1 text-xs font-bold text-amber-600">
+	                    {hospital.rating || "New"} ★
+	                  </div>
+	                </div>
 
                 <div className="mb-4 grid grid-cols-3 gap-2">
                   <div className="rounded-xl bg-gray-50 p-2">
@@ -819,11 +960,23 @@ export default function Hospitals() {
                   <span>No hidden charges</span>
                 </div>
 
-                <div className="flex gap-2 border-t border-gray-100 pt-3">
-                  <button
-                    type="button"
-                    onClick={() => toggleCompare(hospital)}
-                    className={`flex-1 rounded-xl border px-3 py-2 text-xs font-bold transition ${
+	                <div className="flex gap-2 border-t border-gray-100 pt-3">
+	                  <button
+	                    type="button"
+	                    onClick={() => toggleSave(hospital)}
+	                    className={`rounded-xl border px-3 py-2 text-xs font-bold transition ${
+	                      isSaved(hospital)
+	                        ? "border-blue-500 bg-blue-50 text-blue-700"
+	                        : "border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-700"
+	                    }`}
+	                    aria-label={isSaved(hospital) ? "Unsave hospital" : "Save hospital"}
+	                  >
+	                    {isSaved(hospital) ? "Saved" : "Save"}
+	                  </button>
+	                  <button
+	                    type="button"
+	                    onClick={() => toggleCompare(hospital)}
+	                    className={`flex-1 rounded-xl border px-3 py-2 text-xs font-bold transition ${
                       isComparing(hospital)
                         ? "border-teal-600 bg-teal-50 text-teal-700"
                         : "border-gray-200 text-gray-600 hover:border-teal-300 hover:text-teal-700"

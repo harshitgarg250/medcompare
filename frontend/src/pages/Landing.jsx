@@ -24,13 +24,19 @@ const STEPS = [
   { step: "02", title: "Compare Prices", desc: "See prices, ratings & distance", icon: "⚖️", color: "bg-teal-50 text-teal-600" },
   { step: "03", title: "Book Instantly", desc: "Confirm in seconds", icon: "📅", color: "bg-purple-50 text-purple-600" },
 ];
-const WHY_CHOOSE_US = [
-  { icon: "🏥", title: "Verified Hospitals", desc: "Only trusted diagnostic partners and hospitals." },
-  { icon: "💰", title: "Lowest Price Guarantee", desc: "Compare prices before you book." },
-  { icon: "⚡", title: "Instant Booking", desc: "Reserve your test slot in seconds." },
-  { icon: "🔒", title: "Secure Payments", desc: "Your booking and payment details stay protected." },
-  { icon: "📍", title: "Nearby Locations", desc: "Find options close to your area." },
+
+const TOP_HOSPITALS = [
+  { name: "CityCare Diagnostics", rating: "4.8", distance: "1.2 km", tests: "MRI, CT Scan, Blood Tests", price: "MRI from ₹2,500" },
+  { name: "Metro Imaging Centre", rating: "4.7", distance: "2.1 km", tests: "MRI, X-Ray, Ultrasound", price: "MRI from ₹2,750" },
+  { name: "LifeLine Hospital", rating: "4.6", distance: "3.4 km", tests: "Full Body Checkup, ECG, CBC", price: "CBC from ₹80" },
 ];
+
+const COMPARISON_ROWS = [
+  { hospital: "CityCare Diagnostics", distance: "1.2 km", rating: "4.8", price: "₹2,500", saving: "Best price" },
+  { hospital: "Metro Imaging Centre", distance: "2.1 km", rating: "4.7", price: "₹2,750", saving: "Save ₹1,750" },
+  { hospital: "LifeLine Hospital", distance: "3.4 km", rating: "4.6", price: "₹3,100", saving: "Save ₹1,400" },
+];
+
 const TESTIMONIALS = [
   {
     quote: "I saved ₹1800 on my MRI scan.",
@@ -42,41 +48,40 @@ const TESTIMONIALS = [
   },
 ];
 
-const CITIES = ["Dehradun", "Delhi", "Mumbai", "Saharanpur", "Haridwar", "Mussoorie"];
+const FAQS = [
+  { q: "Are the prices shown final?", a: "Prices are shared by partner hospitals and diagnostic centres. Any extra charges are shown before booking where applicable." },
+  { q: "Can I compare hospitals near my location?", a: "Yes. Search any test with your city or area to see nearby options, prices, ratings and distance." },
+  { q: "Do I need to pay before visiting?", a: "You can confirm a slot online. Payment options depend on the hospital and selected test." },
+  { q: "Are hospitals verified?", a: "MedCompare lists trusted diagnostic partners and hospitals with transparent test pricing." },
+];
 
-const ADVISOR_RULES = [
+const FEATURE_PHASES = [
   {
-    keywords: ["headache", "dizziness", "chakkar", "migraine", "sir dard"],
-    tests: ["CBC", "Blood Sugar", "MRI Brain"],
+    phase: "Phase 1",
+    status: "Live foundation",
+    features: ["Recently viewed tests", "Saved hospitals", "Compare hospitals", "Hospital ratings", "Search history"],
   },
   {
-    keywords: ["fever", "weakness", "body pain", "infection", "bukhar"],
-    tests: ["CBC", "CRP", "Blood Culture"],
+    phase: "Phase 2",
+    status: "Smart discovery",
+    features: ["AI assistant", "Voice search", "Google Maps integration", "Price alerts", "Report upload"],
   },
   {
-    keywords: ["chest pain", "breath", "heart", "palpitation"],
-    tests: ["ECG", "Troponin I", "Lipid Profile"],
-  },
-  {
-    keywords: ["thyroid", "weight gain", "hair fall", "fatigue"],
-    tests: ["Thyroid Profile", "Vitamin D", "CBC"],
-  },
-  {
-    keywords: ["stomach", "abdominal", "liver", "vomiting", "pet dard"],
-    tests: ["Liver Function Test", "Ultrasound", "CBC"],
+    phase: "Phase 3",
+    status: "Care platform",
+    features: ["Home sample collection", "Online consultation", "Health packages", "Insurance integration"],
   },
 ];
+
+const CITIES = ["Dehradun", "Delhi", "Mumbai", "Saharanpur", "Haridwar", "Mussoorie"];
 
 export default function Landing() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [location, setLocation] = useState("Dehradun");
-  const [activeCategory, setActiveCategory] = useState(null);
   const [scrollY, setScrollY] = useState(0);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [allTests, setAllTests] = useState([]);
-  const [symptoms, setSymptoms] = useState("");
-  const [advisorResults, setAdvisorResults] = useState(["CBC", "Blood Sugar", "MRI Brain"]);
 
   useEffect(() => {
     const fn = () => setScrollY(window.scrollY);
@@ -110,14 +115,6 @@ export default function Landing() {
     if (search.trim()) params.set("search", search.trim());
     if (location.trim()) params.set("location", location.trim());
     navigate(`/hospitals?${params.toString()}`);
-  };
-
-  const handleAdvisor = () => {
-    const q = symptoms.toLowerCase();
-    const matched = ADVISOR_RULES.find((rule) =>
-      rule.keywords.some((keyword) => q.includes(keyword))
-    );
-    setAdvisorResults(matched?.tests || ["CBC", "Blood Sugar", "Doctor Consultation"]);
   };
 
   return (
@@ -275,43 +272,6 @@ export default function Landing() {
             </div>
           </motion.div>
 
-          {/* Category chips — horizontal scroll */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.35 }}
-            className="flex gap-2 overflow-x-auto pb-1 scroll-smooth"
-            style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}
-          >
-            {CATEGORIES.map((c) => (
-              <button
-                key={c.name}
-                onClick={() => { setActiveCategory(c.name); navigate(`/hospitals?search=${encodeURIComponent(c.name)}`); }}
-                style={{ scrollSnapAlign: "start" }}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border whitespace-nowrap shrink-0 transition ${
-                  activeCategory === c.name
-                    ? "bg-teal-600 text-white border-teal-600"
-                    : "bg-white text-gray-600 border-gray-200 hover:border-teal-400"
-                }`}
-              >
-                <img src={c.image} alt={c.name} className="h-8 w-8 rounded-lg object-cover" loading="lazy" />
-                <span className="flex flex-col items-start leading-tight">
-                  <span>{c.name}</span>
-                  <span>
-                    <span className={`font-bold ${activeCategory === c.name ? "text-white" : "text-teal-600"}`}>
-                      {c.price}
-                    </span>
-                    <span className={`ml-1 line-through ${activeCategory === c.name ? "text-teal-100" : "text-gray-300"}`}>
-                      {c.originalPrice}
-                    </span>
-                  </span>
-                </span>
-                <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${activeCategory === c.name ? "bg-white/20 text-white" : "bg-green-50 text-green-600"}`}>
-                  {c.saving}
-                </span>
-              </button>
-            ))}
-          </motion.div>
         </div>
       </section>
 
@@ -350,6 +310,176 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ── POPULAR TESTS ── */}
+      <section className="bg-gray-50 px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-5"
+          >
+            <h2 className="text-xl font-extrabold text-gray-800">Popular Tests</h2>
+            <p className="text-xs text-gray-400 mt-1">High-intent searches with visible savings.</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
+            {CATEGORIES.map((c, i) => (
+              <motion.div
+                key={c.name}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.06 }}
+                className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <img src={c.image} alt={c.name} className="h-28 w-full object-cover" loading="lazy" />
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-extrabold text-gray-800">{c.name}</h3>
+                      <p className="mt-1 text-xs text-gray-400">Compare nearby verified centres</p>
+                    </div>
+                    <span className="rounded-full bg-green-50 px-2 py-1 text-[11px] font-bold text-green-600">{c.saving}</span>
+                  </div>
+                  <div className="mt-3 flex items-end justify-between gap-3">
+                    <div>
+                      <span className="text-lg font-extrabold text-teal-600">{c.price}</span>
+                      <span className="ml-2 text-xs text-gray-300 line-through">{c.originalPrice}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/hospitals?search=${encodeURIComponent(c.name)}&location=${encodeURIComponent(location || "Dehradun")}`)}
+                      className="rounded-xl bg-gray-900 px-3 py-2 text-xs font-bold text-white transition hover:bg-teal-600"
+                    >
+                      Compare
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── HOW IT WORKS — compact timeline ── */}
+      <section className="bg-white px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-5xl">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false }}
+            className="text-center mb-6"
+          >
+            <h2 className="text-xl font-extrabold text-gray-800">How it works</h2>
+            <p className="text-gray-400 text-xs mt-1">3 simple steps</p>
+          </motion.div>
+
+          <div className="relative">
+            <div className="absolute left-6 top-6 bottom-6 w-0.5 bg-gray-200 hidden sm:block" />
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {STEPS.map((s, i) => (
+                <motion.div
+                  key={s.step}
+                  initial={{ opacity: 0, x: -16 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: false }}
+                  transition={{ delay: i * 0.12 }}
+                  className="flex-1 bg-gray-50 rounded-2xl p-4 shadow-sm border border-gray-100 flex sm:flex-col gap-3 sm:gap-2 items-start sm:items-center sm:text-center"
+                >
+                  <div className={`w-10 h-10 ${s.color} rounded-xl flex items-center justify-center text-lg shrink-0`}>
+                    {s.icon}
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-gray-400 mb-0.5">Step {s.step}</div>
+                    <div className="font-bold text-gray-800 text-sm">{s.title}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">{s.desc}</div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── TOP HOSPITALS ── */}
+      <section className="bg-gray-50 px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-5"
+          >
+            <h2 className="text-xl font-extrabold text-gray-800">Top Hospitals Near You</h2>
+            <p className="text-xs text-gray-400 mt-1">Verified options with ratings, distance and starting prices.</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:gap-4">
+            {TOP_HOSPITALS.map((hospital, i) => (
+              <motion.div
+                key={hospital.name}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.06 }}
+                className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="text-sm font-extrabold text-gray-800">{hospital.name}</h3>
+                  <span className="rounded-full bg-amber-50 px-2 py-1 text-xs font-bold text-amber-700">★ {hospital.rating}</span>
+                </div>
+                <p className="mt-2 text-xs text-gray-500">{hospital.tests}</p>
+                <div className="mt-4 flex items-center justify-between gap-3 text-xs">
+                  <span className="font-bold text-blue-600">{hospital.distance}</span>
+                  <span className="font-extrabold text-teal-600">{hospital.price}</span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── COMPARISON EXAMPLE ── */}
+      <section className="bg-white px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-5"
+          >
+            <h2 className="text-xl font-extrabold text-gray-800">MRI Price Comparison Example</h2>
+            <p className="text-xs text-gray-400 mt-1">Show users the exact value before asking them to book.</p>
+          </motion.div>
+
+          <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+            <div className="grid grid-cols-[1.4fr_0.8fr_0.7fr_0.8fr_0.9fr] bg-gray-900 px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-white">
+              <div>Hospital</div>
+              <div>Distance</div>
+              <div>Rating</div>
+              <div>Price</div>
+              <div>Saving</div>
+            </div>
+            {COMPARISON_ROWS.map((row, i) => (
+              <button
+                key={row.hospital}
+                type="button"
+                onClick={() => navigate(`/hospitals?search=MRI%20Scan&location=${encodeURIComponent(location || "Dehradun")}`)}
+                className={`grid w-full grid-cols-[1.4fr_0.8fr_0.7fr_0.8fr_0.9fr] px-4 py-3 text-left text-xs transition hover:bg-teal-50 ${i !== COMPARISON_ROWS.length - 1 ? "border-b border-gray-100" : ""}`}
+              >
+                <span className="font-bold text-gray-800">{row.hospital}</span>
+                <span className="text-gray-500">{row.distance}</span>
+                <span className="font-bold text-amber-600">★ {row.rating}</span>
+                <span className="font-extrabold text-teal-600">{row.price}</span>
+                <span className="font-bold text-green-600">{row.saving}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── TESTIMONIALS ── */}
       <section className="bg-gray-50 px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
@@ -375,144 +505,84 @@ export default function Landing() {
               >
                 <div className="mb-3 text-sm font-bold text-amber-500">★★★★★</div>
                 <p className="text-sm font-semibold leading-relaxed text-gray-700">"{item.quote}"</p>
-                <div className="mt-4 text-xs font-bold text-gray-500">— {item.name}</div>
+                <div className="mt-4 text-xs font-bold text-gray-500">- {item.name}</div>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── WHY CHOOSE US ── */}
+      {/* ── FAQ ── */}
       <section className="bg-white px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-4xl">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-center mb-5"
           >
-            <h2 className="text-xl font-extrabold text-gray-800">Why Choose MedCompare?</h2>
-            <p className="text-xs text-gray-400 mt-1">Built for transparent, faster medical test booking.</p>
+            <h2 className="text-xl font-extrabold text-gray-800">FAQ</h2>
+            <p className="text-xs text-gray-400 mt-1">Reduce doubt before the final click.</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
-            {WHY_CHOOSE_US.map((item, i) => (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 14 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className="flex gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-4"
-              >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-lg shadow-sm">
-                  {item.icon}
-                </div>
-                <div>
-                  <h3 className="text-sm font-extrabold text-gray-800">{item.title}</h3>
-                  <p className="mt-1 text-xs leading-relaxed text-gray-500">{item.desc}</p>
-                </div>
-              </motion.div>
+          <div className="grid gap-3">
+            {FAQS.map((item) => (
+              <details key={item.q} className="group rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                <summary className="cursor-pointer list-none text-sm font-extrabold text-gray-800">
+                  <span className="inline-flex w-full items-center justify-between gap-4">
+                    {item.q}
+                    <span className="text-lg text-teal-600 transition group-open:rotate-45">+</span>
+                  </span>
+                </summary>
+                <p className="mt-2 text-xs leading-relaxed text-gray-500">{item.a}</p>
+              </details>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── AI ADVISOR ── */}
+      {/* ── MODERN FEATURES ── */}
       <section className="bg-gray-50 px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-5xl">
+        <div className="mx-auto max-w-6xl">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm"
+            className="mb-5 text-center"
           >
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between mb-4">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-teal-50 px-3 py-1 text-xs font-bold text-teal-700 mb-2">
-                  🤖 AI Test Advisor
-                </div>
-                <h2 className="text-xl font-extrabold text-gray-800">Not sure which test to book?</h2>
-                <p className="text-xs text-gray-400 mt-1">Describe symptoms and get suggested tests to compare.</p>
-              </div>
-            </div>
+            <h2 className="text-xl font-extrabold text-gray-800">Modern Features</h2>
+            <p className="mt-1 text-xs text-gray-400">A smarter comparison experience, built in phases.</p>
+          </motion.div>
 
-            <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
-              <textarea
-                value={symptoms}
-                onChange={(e) => setSymptoms(e.target.value)}
-                placeholder='Describe symptoms, e.g. "I have headache and dizziness"'
-                rows={3}
-                className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-700 outline-none transition focus:border-teal-400 focus:bg-white focus:ring-2 focus:ring-teal-50"
-              />
-              <button
-                type="button"
-                onClick={handleAdvisor}
-                className="rounded-xl bg-teal-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-teal-700"
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:gap-4">
+            {FEATURE_PHASES.map((phase, i) => (
+              <motion.div
+                key={phase.phase}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.06 }}
+                className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm"
               >
-                Suggest Tests
-              </button>
-            </div>
-
-            <div className="mt-4 grid gap-2 sm:grid-cols-3">
-              {advisorResults.map((test) => (
-                <button
-                  key={test}
-                  type="button"
-                  onClick={() => navigate(`/hospitals?search=${encodeURIComponent(test)}&location=${encodeURIComponent(location || "Dehradun")}`)}
-                  className="rounded-xl border border-teal-100 bg-teal-50 px-3 py-3 text-left transition hover:border-teal-300 hover:bg-white"
-                >
-                  <div className="text-sm font-extrabold text-gray-800">{test}</div>
-                  <div className="text-xs text-teal-600 mt-1">Compare prices →</div>
-                </button>
-              ))}
-            </div>
-
-            <p className="mt-3 text-[11px] text-gray-400">
-              This advisor is for guidance only and does not replace medical advice.
-            </p>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── HOW IT WORKS — compact timeline ── */}
-      <section className="bg-gray-50 px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-5xl">
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false }}
-            className="text-center mb-6"
-          >
-            <h2 className="text-xl font-extrabold text-gray-800">How it works</h2>
-            <p className="text-gray-400 text-xs mt-1">3 simple steps</p>
-          </motion.div>
-
-          <div className="relative">
-            {/* Line */}
-            <div className="absolute left-6 top-6 bottom-6 w-0.5 bg-gray-200 hidden sm:block" />
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              {STEPS.map((s, i) => (
-                <motion.div
-                  key={s.step}
-                  initial={{ opacity: 0, x: -16 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: false }}
-                  transition={{ delay: i * 0.12 }}
-                  className="flex-1 bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex sm:flex-col gap-3 sm:gap-2 items-start sm:items-center sm:text-center"
-                >
-                  <div className={`w-10 h-10 ${s.color} rounded-xl flex items-center justify-center text-lg shrink-0`}>
-                    {s.icon}
-                  </div>
+                <div className="mb-4 flex items-start justify-between gap-3">
                   <div>
-                    <div className="text-xs font-bold text-gray-400 mb-0.5">Step {s.step}</div>
-                    <div className="font-bold text-gray-800 text-sm">{s.title}</div>
-                    <div className="text-xs text-gray-500 mt-0.5">{s.desc}</div>
+                    <h3 className="text-sm font-extrabold text-gray-800">{phase.phase}</h3>
+                    <p className="mt-1 text-xs font-bold text-teal-600">{phase.status}</p>
                   </div>
-                </motion.div>
-              ))}
-            </div>
+                  <span className="rounded-full bg-gray-900 px-2 py-1 text-[11px] font-bold text-white">
+                    {i === 0 ? "Now" : "Next"}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {phase.features.map((feature) => (
+                    <div key={feature} className="flex items-center gap-2 text-xs font-semibold text-gray-600">
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-50 text-[10px] text-teal-700">✓</span>
+                      <span>{feature}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
@@ -546,7 +616,7 @@ export default function Landing() {
                 onClick={() => navigate("/register")}
                 className="border-2 border-white border-opacity-60 text-white px-6 py-3 rounded-2xl font-bold text-sm hover:bg-white hover:bg-opacity-10 transition"
               >
-                Create Free Account
+                Compare Prices Now
               </motion.button>
             </div>
           </motion.div>
