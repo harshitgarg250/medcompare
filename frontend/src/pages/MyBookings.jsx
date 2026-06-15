@@ -16,6 +16,7 @@ function MyBookings() {
   } = useQuery({
     queryKey: ['my-bookings'],
     queryFn: () => API.get('/bookings/my').then((res) => res.data),
+    enabled: Boolean(user),
   })
 
   const handleCancel = async (id) => {

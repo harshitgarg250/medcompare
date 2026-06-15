@@ -6,16 +6,21 @@ datasource db {
   provider = "postgresql"
 }
 model User {
-  id        Int       @id @default(autoincrement())
-  name      String
-  email     String    @unique
-  phone     String?
-  password  String
-  role      Role      @default(USER)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  bookings  Booking[]
-  reviews   Review[]
+  id                   Int       @id @default(autoincrement())
+  name                 String
+  email                String    @unique
+  phone                String?
+  password             String?
+  profilePicture       String?
+  authProvider         String    @default("email")
+  googleId             String?   @unique
+  resetPasswordOtpHash String?
+  resetPasswordExpires DateTime?
+  role                 Role      @default(USER)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  bookings             Booking[]
+  reviews              Review[]
 }
 
 enum Role {

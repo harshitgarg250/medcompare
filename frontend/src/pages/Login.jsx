@@ -1,22 +1,77 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import API from '../services/api'
+import GoogleAuthButton from '../components/GoogleAuthButton'
 import useAuthStore from '../store/authStore'
 
 function Login() {
   const navigate = useNavigate()
-  const { login } = useAuthStore()
+  const { login, user } = useAuthStore()
   const [isLogin, setIsLogin] = useState(true)
   const [loading, setLoading] = useState(false)
+  const [resetOpen, setResetOpen] = useState(false)
+  const [resetStep, setResetStep] = useState(1)
+  const [resetLoading, setResetLoading] = useState(false)
   const [form, setForm] = useState({
     name: '', email: '', phone: '', password: ''
+  })
+  const [resetForm, setResetForm] = useState({
+    email: '',
+    otp: '',
+    password: ''
   })
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault()
+    if (!resetForm.email) {
+      toast.error('Please enter your registered email')
+      return
+    }
+
+    setResetLoading(true)
+    try {
+      const res = await API.post('/auth/forgot-password', { email: resetForm.email })
+      toast.success(res.data.message || 'Reset code sent')
+      setResetStep(2)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not send reset code')
+    } finally {
+      setResetLoading(false)
+    }
+  }
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault()
+    if (resetForm.password.length < 6) {
+      toast.error('Password must be at least 6 characters')
+      return
+    }
+
+    setResetLoading(true)
+    try {
+      const res = await API.post('/auth/reset-password', resetForm)
+      login(res.data.user, res.data.token)
+      toast.success('Password reset successful')
+      setResetOpen(false)
+      navigate('/hospitals')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not reset password')
+    } finally {
+      setResetLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (user) {
+      navigate('/hospitals', { replace: true })
+    }
+  }, [navigate, user])
 
  const handleSubmit = async (e) => {
   e.preventDefault()
@@ -165,7 +220,22 @@ function Login() {
           )}
 
           <div>
-            <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Password</label>
+            <div className="mb-1.5 flex items-center justify-between gap-3">
+              <label className="text-xs font-semibold text-gray-500 block">Password</label>
+              {isLogin && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setResetOpen(true)
+                    setResetStep(1)
+                    setResetForm({ email: form.email, otp: '', password: '' })
+                  }}
+                  className="text-xs font-bold text-teal-600 hover:underline"
+                >
+                  Forgot Password?
+                </button>
+              )}
+            </div>
             <input
               type="password"
               name="password"
@@ -188,6 +258,14 @@ function Login() {
           </motion.button>
         </form>
 
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-gray-100" />
+          <span className="text-xs font-bold text-gray-300">OR</span>
+          <div className="h-px flex-1 bg-gray-100" />
+        </div>
+
+        <GoogleAuthButton onSuccess={() => navigate('/hospitals')} />
+
         {/* SWITCH LINK */}
         <p className="text-center text-sm text-gray-400 mt-6">
           {isLogin ? "Don't have an account? " : 'Already have an account? '}
@@ -199,6 +277,96 @@ function Login() {
           </button>
         </p>
       </motion.div>
+
+      {resetOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 px-4 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, y: 18, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            className="w-full max-w-md rounded-3xl border border-gray-100 bg-white p-6 shadow-2xl"
+          >
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-extrabold text-gray-800">Reset Password</h2>
+                <p className="mt-1 text-sm text-gray-400">
+                  {resetStep === 1 ? 'Enter your email to receive a verification code.' : 'Enter the code and create a new password.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setResetOpen(false)}
+                className="rounded-full bg-gray-100 px-3 py-1 text-sm font-bold text-gray-500"
+              >
+                ✕
+              </button>
+            </div>
+
+            {resetStep === 1 ? (
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-gray-500">Email Address</label>
+                  <input
+                    type="email"
+                    required
+                    value={resetForm.email}
+                    onChange={(e) => setResetForm({ ...resetForm, email: e.target.value })}
+                    placeholder="you@email.com"
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-50"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={resetLoading}
+                  className="w-full rounded-xl bg-teal-600 py-3 text-sm font-bold text-white transition hover:bg-teal-700 disabled:opacity-60"
+                >
+                  {resetLoading ? 'Sending...' : 'Send Verification Code'}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-gray-500">Verification Code</label>
+                  <input
+                    type="text"
+                    required
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={resetForm.otp}
+                    onChange={(e) => setResetForm({ ...resetForm, otp: e.target.value })}
+                    placeholder="123456"
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-center text-lg font-extrabold tracking-[0.3em] outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-50"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-gray-500">New Password</label>
+                  <input
+                    type="password"
+                    required
+                    value={resetForm.password}
+                    onChange={(e) => setResetForm({ ...resetForm, password: e.target.value })}
+                    placeholder="••••••••"
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-50"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={resetLoading}
+                  className="w-full rounded-xl bg-teal-600 py-3 text-sm font-bold text-white transition hover:bg-teal-700 disabled:opacity-60"
+                >
+                  {resetLoading ? 'Resetting...' : 'Reset Password'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setResetStep(1)}
+                  className="w-full text-sm font-bold text-gray-400"
+                >
+                  Use a different email
+                </button>
+              </form>
+            )}
+          </motion.div>
+        </div>
+      )}
     </div>
   )
 }

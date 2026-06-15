@@ -1,13 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import API from '../services/api'
+import GoogleAuthButton from '../components/GoogleAuthButton'
 import useAuthStore from '../store/authStore'
 
 function Register() {
   const navigate = useNavigate()
-  const { login } = useAuthStore()
+  const { login, user } = useAuthStore()
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -15,6 +16,12 @@ function Register() {
     password: ''
   })
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (user) {
+      navigate('/hospitals', { replace: true })
+    }
+  }, [navigate, user])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -110,6 +117,14 @@ function Register() {
             {loading ? 'Creating account...' : 'Create Account →'}
           </motion.button>
         </form>
+
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-gray-100" />
+          <span className="text-xs font-bold text-gray-300">OR</span>
+          <div className="h-px flex-1 bg-gray-100" />
+        </div>
+
+        <GoogleAuthButton onSuccess={() => navigate('/hospitals')} />
 
         <p className="text-center text-sm text-gray-400 mt-6">
           Already have an account?{' '}
