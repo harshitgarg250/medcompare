@@ -7,6 +7,8 @@ const hospitalRoutes = require('./routes/hospital.routes')
 const testRoutes = require('./routes/test.routes')
 const bookingRoutes = require('./routes/booking.routes')
 const slotRoutes = require('./routes/slot.routes')
+const reportRoutes = require('./routes/report.routes')
+
 
 const app = express()
 const PORT = process.env.PORT || 5001
@@ -20,7 +22,7 @@ app.use('/api/hospitals', hospitalRoutes)
 app.use('/api/tests', testRoutes)
 app.use('/api/bookings', bookingRoutes)
 app.use('/api/slots', slotRoutes)
-
+app.use('/api/reports', reportRoutes)
 app.get('/', (req, res) => {
   res.json({ message: 'MedCompare API is running 🚀' })
 })

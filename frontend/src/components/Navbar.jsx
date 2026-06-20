@@ -41,12 +41,20 @@ function Navbar() {
             Hospitals
           </Link>
           {user && (
-            <Link
-              to="/my-bookings"
-              className={navLinkClass("/my-bookings")}
-            >
-              My Bookings
-            </Link>
+            <>
+              <Link
+                to="/my-bookings"
+                className={navLinkClass("/my-bookings")}
+              >
+                My Bookings
+              </Link>
+              <Link
+                to="/reports"
+                className={navLinkClass("/reports")}
+              >
+                📋 Reports
+              </Link>
+            </>
           )}
           {user ? (
             <div className="ml-2 flex items-center gap-2 rounded-full border border-gray-100 bg-gray-50 p-1">
@@ -134,16 +142,28 @@ function Navbar() {
               </Link>
 
               {user && (
-                <Link
-                  to="/my-bookings"
-                  onClick={() => setMenuOpen(false)}
-                  className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-extrabold transition ${
-                    isActive("/my-bookings") ? "bg-teal-50 text-teal-700" : "bg-white text-gray-700 hover:bg-gray-50"
-                  }`}
-                >
-                  <span>My Bookings</span>
-                  <span className="text-lg">→</span>
-                </Link>
+                <>
+                  <Link
+                    to="/my-bookings"
+                    onClick={() => setMenuOpen(false)}
+                    className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-extrabold transition ${
+                      isActive("/my-bookings") ? "bg-teal-50 text-teal-700" : "bg-white text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <span>My Bookings</span>
+                    <span className="text-lg">→</span>
+                  </Link>
+                  <Link
+                    to="/reports"
+                    onClick={() => setMenuOpen(false)}
+                    className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-extrabold transition ${
+                      isActive("/reports") ? "bg-teal-50 text-teal-700" : "bg-white text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <span>📋 Reports</span>
+                    <span className="text-lg">→</span>
+                  </Link>
+                </>
               )}
             </div>
 

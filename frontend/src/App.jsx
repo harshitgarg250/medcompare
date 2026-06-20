@@ -1,18 +1,17 @@
-import { Routes, Route } from 'react-router-dom'
-import Navbar from './components/Navbar'
-import Landing from './pages/Landing'
-import Login from './pages/Login'
-import Hospitals from './pages/Hospitals'
-import HospitalDetail from './pages/HospitalDetail'
-import Booking from './pages/Booking'
-import MyBookings from './pages/MyBookings'
-import Register from './pages/Register'
+import { Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import Landing from "./pages/Landing";
+import Login from "./pages/Login";
+import Hospitals from "./pages/Hospitals";
+import HospitalDetail from "./pages/HospitalDetail";
+import Booking from "./pages/Booking";
+import MyBookings from "./pages/MyBookings";
+import Register from "./pages/Register";
 
-import ExternalHospital from './pages/ExternalHospital'
+import ExternalHospital from "./pages/ExternalHospital";
 
-
-
-
+import MyReports from "./pages/MyReports";
+import ReportDetail from "./pages/ReportDetail";
 
 function App() {
   return (
@@ -27,9 +26,11 @@ function App() {
         <Route path="/my-bookings" element={<MyBookings />} />
         <Route path="/register" element={<Register />} />
         <Route path="/external-hospital" element={<ExternalHospital />} />
+        <Route path="/reports" element={<MyReports />} />
+        <Route path="/reports/:id" element={<ReportDetail />} />
       </Routes>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

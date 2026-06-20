@@ -21,6 +21,7 @@ model User {
   updatedAt            DateTime  @updatedAt
   bookings             Booking[]
   reviews              Review[]
+  reports              Report[]
 }
 
 enum Role {
@@ -48,6 +49,7 @@ model Hospital {
   slots       Slot[]
   bookings    Booking[]
   reviews     Review[]
+  reports     Report[]
 }
 
 model Test {
@@ -58,6 +60,7 @@ model Test {
   createdAt   DateTime    @default(now())
   prices      TestPrice[]
   bookings    Booking[]
+  reports     Report[]
 }
 
 model TestPrice {
@@ -100,6 +103,7 @@ model Booking {
   slotId     Int           @unique
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
+  report    Report?
 }
 
 enum BookingStatus {
@@ -118,4 +122,43 @@ model Review {
   hospital   Hospital @relation(fields: [hospitalId], references: [id])
   hospitalId Int
   createdAt  DateTime @default(now())
+}
+model Report {
+  id                    Int       @id @default(autoincrement())
+  reportId              String    @unique @default(cuid())
+  bookingId             Int       @unique
+  booking               Booking   @relation(fields: [bookingId], references: [id])
+  userId                Int
+  user                  User      @relation(fields: [userId], references: [id])
+  hospitalId            Int
+  hospital              Hospital  @relation(fields: [hospitalId], references: [id])
+  testId                Int
+  test                  Test      @relation(fields: [testId], references: [id])
+  status                String    @default("PENDING")
+  sampleType            String    @default("Blood")
+  sampleCollectedAt     DateTime?
+  sampleReceivedAt      DateTime?
+  reportGeneratedAt     DateTime?
+  results               ReportResult[]
+  healthScore           Int?
+  riskLevel             String?
+  doctorName            String?
+  technicianName        String?
+  notes                 String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+model ReportResult {
+  id              Int     @id @default(autoincrement())
+  reportId        Int
+  report          Report  @relation(fields: [reportId], references: [id])
+  parameterName   String
+  value           String
+  unit            String?
+  referenceRange  String?
+  status          String  @default("NORMAL")
+  previousValue   String?
+  trend           String?
+  createdAt       DateTime @default(now())
 }
