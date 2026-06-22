@@ -243,19 +243,40 @@ function Booking() {
               <div className="grid grid-cols-3 gap-2">
                 {TIMES.map((time) => {
                   const isBooked = bookedTimes.includes(time);
+
+                  let isPast = false;
+                  if (selectedDate) {
+                    const todayStr = new Date().toLocaleDateString("en-CA");
+                    if (selectedDate === todayStr) {
+                      const [timePart, meridiem] = time.split(" ");
+                      let [hours, minutes] = timePart.split(":").map(Number);
+                      if (meridiem === "PM" && hours !== 12) hours += 12;
+                      if (meridiem === "AM" && hours === 12) hours = 0;
+
+                      const slotDate = new Date();
+                      slotDate.setHours(hours, minutes, 0, 0);
+
+                      isPast = slotDate.getTime() <= new Date().getTime();
+                    }
+                  }
+
+                  const isDisabled = isBooked || !selectedDate || isPast;
+
                   return (
                     <button
                       key={time}
-                      disabled={isBooked || !selectedDate}
-                      onClick={() => !isBooked && setSelectedTime(time)}
+                      disabled={isDisabled}
+                      onClick={() => !isDisabled && setSelectedTime(time)}
                       className={`py-2 px-3 rounded-xl text-xs font-medium border transition ${
                         isBooked
                           ? "bg-gray-100 text-gray-300 border-gray-100 cursor-not-allowed line-through"
-                          : selectedTime === time
-                            ? "bg-teal-600 text-white border-teal-600"
-                            : !selectedDate
-                              ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
-                              : "bg-white text-gray-600 border-gray-200 hover:border-teal-400"
+                          : isPast
+                            ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed line-through"
+                            : selectedTime === time
+                              ? "bg-teal-600 text-white border-teal-600"
+                              : !selectedDate
+                                ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
+                                : "bg-white text-gray-600 border-gray-200 hover:border-teal-400"
                       }`}
                     >
                       {isBooked ? `${time} ✗` : time}
@@ -263,6 +284,9 @@ function Booking() {
                   );
                 })}
               </div>
+              {selectedDate === new Date().toLocaleDateString("en-CA") && (
+                <p className="text-xs text-amber-500 mt-2">⏰ Past time slots are disabled for today</p>
+              )}
               {bookedTimes.length > 0 && (
                 <p className="text-xs text-gray-400 mt-3">✗ = Already booked</p>
               )}
