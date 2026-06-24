@@ -4,10 +4,12 @@ import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import API from '../services/api'
 import useAuthStore from '../store/authStore'
+import { useQueryClient } from '@tanstack/react-query'
 
 function MyBookings() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
+  const queryClient = useQueryClient()
 
   const {
     data: bookings = [],
@@ -26,6 +28,17 @@ function MyBookings() {
       refetch()
     } catch {
       toast.error('Could not cancel booking')
+    }
+  }
+
+  const handleGenerateReport = async (bookingId) => {
+    try {
+      const res = await API.post(`/reports/auto-generate/${bookingId}`)
+      toast.success('Report generated!')
+      queryClient.invalidateQueries(['my-bookings'])
+      navigate(`/reports/${res.data.report.reportId}`)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not generate report')
     }
   }
 
@@ -199,6 +212,20 @@ function MyBookings() {
                     )}
                   </div>
                 </div>
+
+                {/* Report button */}
+                {booking.status === 'CONFIRMED' && (() => {
+                  const bookingDate = new Date(booking.slot?.date)
+                  const isPast = bookingDate < new Date()
+                  return isPast ? (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleGenerateReport(booking.id) }}
+                      className="w-full mt-2 bg-gradient-to-r from-teal-500 to-blue-500 text-white py-2 rounded-xl text-xs font-bold"
+                    >
+                      📋 View / Generate Report
+                    </button>
+                  ) : null
+                })()}
               </motion.div>
             ))}
           </div>

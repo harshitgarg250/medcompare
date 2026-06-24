@@ -2,7 +2,9 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { useRef } from 'react'
+import toast from 'react-hot-toast'
 import API from '../services/api'
+import html2pdf from 'html2pdf.js'
 
 const statusBadge = {
   NORMAL: 'bg-green-100 text-green-700',
@@ -34,6 +36,18 @@ export default function ReportDetail() {
   })
 
   const handlePrint = () => window.print()
+
+  const handleDownloadPDF = async () => {
+    const element = printRef.current
+    const opt = {
+      margin: 0.5,
+      filename: `MedCompare-Report-${report.reportId}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    }
+    html2pdf().set(opt).from(element).save()
+  }
 
   if (isLoading) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -371,18 +385,33 @@ export default function ReportDetail() {
         </motion.div>
 
         {/* Action buttons */}
-        <div className="flex gap-3 no-print pb-6">
+        <div className="flex gap-3 no-print pb-6 flex-wrap">
           <button
-            onClick={handlePrint}
+            onClick={handleDownloadPDF}
             className="flex-1 bg-gradient-to-r from-teal-500 to-blue-500 text-white py-3 rounded-xl text-sm font-bold hover:opacity-90 transition"
           >
-            🖨️ Print / Save PDF
+            📥 Download PDF
+          </button>
+          <button
+            onClick={handlePrint}
+            className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl text-sm font-bold hover:bg-gray-200 transition"
+          >
+            🖨️ Print
+          </button>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(window.location.href)
+              toast.success('Report link copied!')
+            }}
+            className="flex-1 bg-teal-50 text-teal-600 py-3 rounded-xl text-sm font-bold hover:bg-teal-100 transition"
+          >
+            🔗 Share
           </button>
           <button
             onClick={() => navigate('/hospitals')}
             className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-sm font-bold hover:border-teal-400 transition"
           >
-            Book Another Test
+            Book Another
           </button>
         </div>
       </div>
