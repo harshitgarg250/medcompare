@@ -1,46 +1,46 @@
-import { useQuery } from '@tanstack/react-query'
-import { motion } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
-import toast from 'react-hot-toast'
-import API from '../services/api'
-import useAuthStore from '../store/authStore'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import API from "../services/api";
+import useAuthStore from "../store/authStore";
+import { useQueryClient } from "@tanstack/react-query";
 
 function MyBookings() {
-  const navigate = useNavigate()
-  const { user } = useAuthStore()
-  const queryClient = useQueryClient()
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const queryClient = useQueryClient();
 
   const {
     data: bookings = [],
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ['my-bookings'],
-    queryFn: () => API.get('/bookings/my').then((res) => res.data),
+    queryKey: ["my-bookings"],
+    queryFn: () => API.get("/bookings/my").then((res) => res.data),
     enabled: Boolean(user),
-  })
+  });
 
   const handleCancel = async (id) => {
     try {
-      await API.patch(`/bookings/${id}/cancel`)
-      toast.success('Booking cancelled!')
-      refetch()
+      await API.patch(`/bookings/${id}/cancel`);
+      toast.success("Booking cancelled!");
+      refetch();
     } catch {
-      toast.error('Could not cancel booking')
+      toast.error("Could not cancel booking");
     }
-  }
+  };
 
   const handleGenerateReport = async (bookingId) => {
     try {
-      const res = await API.post(`/reports/auto-generate/${bookingId}`)
-      toast.success('Report generated!')
-      queryClient.invalidateQueries(['my-bookings'])
-      navigate(`/reports/${res.data.report.reportId}`)
+      const res = await API.post(`/reports/auto-generate/${bookingId}`);
+      toast.success("Report generated!");
+      queryClient.invalidateQueries(["my-bookings"]);
+      navigate(`/reports/${res.data.report.reportId}`);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Could not generate report')
+      toast.error(err.response?.data?.message || "Could not generate report");
     }
-  }
+  };
 
   if (!user) {
     return (
@@ -51,14 +51,14 @@ function MyBookings() {
             Please login first
           </h2>
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => navigate("/login")}
             className="bg-teal-600 text-white px-6 py-3 rounded-xl font-bold mt-4"
           >
             Login
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   if (isLoading) {
@@ -66,31 +66,29 @@ function MyBookings() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
       </div>
-    )
+    );
   }
 
   const statusColor = {
-    CONFIRMED: 'bg-green-50 text-green-600',
-    PENDING: 'bg-yellow-50 text-yellow-600',
-    CANCELLED: 'bg-red-50 text-red-500',
-    COMPLETED: 'bg-blue-50 text-blue-600',
-  }
+    CONFIRMED: "bg-green-50 text-green-600",
+    PENDING: "bg-yellow-50 text-yellow-600",
+    CANCELLED: "bg-red-50 text-red-500",
+    COMPLETED: "bg-blue-50 text-blue-600",
+  };
 
   const statusIcon = {
-    CONFIRMED: '✅',
-    PENDING: '⏳',
-    CANCELLED: '❌',
-    COMPLETED: '🎉',
-  }
+    CONFIRMED: "✅",
+    PENDING: "⏳",
+    CANCELLED: "❌",
+    COMPLETED: "🎉",
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">
-            My Bookings
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-800">My Bookings</h1>
           <p className="text-gray-500 mt-2">
             View and manage your hospital test bookings
           </p>
@@ -106,7 +104,7 @@ function MyBookings() {
               You haven't booked any tests yet.
             </p>
             <button
-              onClick={() => navigate('/hospitals')}
+              onClick={() => navigate("/hospitals")}
               className="bg-teal-600 text-white px-6 py-3 rounded-xl font-semibold"
             >
               Browse Hospitals
@@ -143,35 +141,30 @@ function MyBookings() {
 
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   <div className="bg-gray-50 rounded-xl p-2.5">
-                    <div className="text-xs text-gray-400 mb-0.5">
-                      Date
-                    </div>
+                    <div className="text-xs text-gray-400 mb-0.5">Date</div>
                     <div className="text-xs font-semibold text-gray-700">
                       {booking.slot?.date
-                        ? new Date(
-                            booking.slot.date
-                          ).toLocaleDateString('en-IN', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                          })
-                        : 'N/A'}
+                        ? new Date(booking.slot.date).toLocaleDateString(
+                            "en-IN",
+                            {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            },
+                          )
+                        : "N/A"}
                     </div>
                   </div>
 
                   <div className="bg-gray-50 rounded-xl p-2.5">
-                    <div className="text-xs text-gray-400 mb-0.5">
-                      Time
-                    </div>
+                    <div className="text-xs text-gray-400 mb-0.5">Time</div>
                     <div className="text-xs font-semibold text-gray-700">
-                      {booking.slot?.time || 'N/A'}
+                      {booking.slot?.time || "N/A"}
                     </div>
                   </div>
 
                   <div className="bg-gray-50 rounded-xl p-2.5">
-                    <div className="text-xs text-gray-400 mb-0.5">
-                      Amount
-                    </div>
+                    <div className="text-xs text-gray-400 mb-0.5">Amount</div>
                     <div className="text-sm font-bold text-teal-600">
                       ₹{booking.totalPrice}
                     </div>
@@ -202,7 +195,7 @@ function MyBookings() {
                       View
                     </button>
 
-                    {booking.status === 'CONFIRMED' && (
+                    {booking.status === "CONFIRMED" && (
                       <button
                         onClick={() => handleCancel(booking.id)}
                         className="bg-red-50 text-red-500 px-3 py-1.5 rounded-xl text-xs font-medium"
@@ -214,25 +207,72 @@ function MyBookings() {
                 </div>
 
                 {/* Report button */}
-                {booking.status === 'CONFIRMED' && (() => {
-                  const bookingDate = new Date(booking.slot?.date)
-                  const isPast = bookingDate < new Date()
-                  return isPast ? (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleGenerateReport(booking.id) }}
-                      className="w-full mt-2 bg-gradient-to-r from-teal-500 to-blue-500 text-white py-2 rounded-xl text-xs font-bold"
-                    >
-                      📋 View / Generate Report
-                    </button>
-                  ) : null
-                })()}
+                {booking.status === "CONFIRMED" &&
+                  (() => {
+                    // Slot date + time combine karo
+                    const slotDate = booking.slot?.date
+                      ? new Date(booking.slot.date)
+                      : null;
+                    const slotTime = booking.slot?.time || "9:00 AM";
+
+                    let reportAvailableAt = null;
+
+                    if (slotDate) {
+                      const [timePart, meridiem] = slotTime.split(" ");
+                      let [hours, minutes] = timePart.split(":").map(Number);
+                      if (meridiem === "PM" && hours !== 12) hours += 12;
+                      if (meridiem === "AM" && hours === 12) hours = 0;
+
+                      const testDateTime = new Date(slotDate);
+                      testDateTime.setHours(hours, minutes, 0, 0);
+
+                      // Report 2 hours baad available hogi
+                      reportAvailableAt = new Date(
+                        testDateTime.getTime() + 2 * 60 * 60 * 1000,
+                      );
+                    }
+
+                    const now = new Date();
+                    const isTestDone = slotDate && slotDate < now;
+                    const isReportReady =
+                      reportAvailableAt && reportAvailableAt < now;
+
+                    if (!isTestDone) return null; // Test abhi hua nahi
+
+                    if (!isReportReady) {
+                      // Test hua but report abhi ready nahi
+                      const minutesLeft = reportAvailableAt
+                        ? Math.ceil((reportAvailableAt - now) / 60000)
+                        : 0;
+                      return (
+                        <div className="w-full mt-2 bg-amber-50 border border-amber-200 text-amber-700 py-2 px-3 rounded-xl text-xs font-medium text-center">
+                          ⏳ Report processing...
+                          {minutesLeft > 0 &&
+                            ` Ready in ~${minutesLeft < 60 ? `${minutesLeft} min` : `${Math.ceil(minutesLeft / 60)} hr`}`}
+                        </div>
+                      );
+                    }
+
+                    // Report ready hai
+                    return (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleGenerateReport(booking.id);
+                        }}
+                        className="w-full mt-2 bg-gradient-to-r from-teal-500 to-blue-500 text-white py-2 rounded-xl text-xs font-bold"
+                      >
+                        📋 View Report
+                      </button>
+                    );
+                  })()}
               </motion.div>
             ))}
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }
 
-export default MyBookings
+export default MyBookings;
