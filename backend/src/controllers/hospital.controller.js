@@ -75,7 +75,7 @@ const createHospital = async (req, res) => {
 // Nearby hospitals (lat/lng se)
 const getNearbyHospitals = async (req, res) => {
   try {
-    const { lat, lng, radius = 10 } = req.query
+    const { lat, lng, radius = 200 } = req.query
 
     if (!lat || !lng) {
       return res.status(400).json({ message: 'lat and lng required' })

@@ -231,7 +231,7 @@ export default function Hospitals() {
     queryKey: ["hospitals", userLocation],
     queryFn: () =>
       userLocation
-        ? API.get(`/hospitals/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&radius=5000`).then((r) => r.data)
+        ? API.get(`/hospitals/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&radius=200`).then((r) => r.data)
         : API.get("/hospitals").then((r) => r.data),
     enabled: !locationLoading,
   });
