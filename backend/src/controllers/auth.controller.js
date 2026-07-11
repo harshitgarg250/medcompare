@@ -4,12 +4,13 @@ const nodemailer = require('nodemailer')
 const { OAuth2Client } = require('google-auth-library')
 const prisma = require('../config/prisma')
 
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || 'dummy-client-id')
+const JWT_SECRET = process.env.JWT_SECRET || 'medcompare_super_secret_key_2024'
 
 const createToken = (user) =>
   jwt.sign(
     { userId: user.id, role: user.role },
-    process.env.JWT_SECRET,
+    JWT_SECRET,
     { expiresIn: '7d' }
   )
 
@@ -100,6 +101,7 @@ const register = async (req, res) => {
       user: publicUser(user)
     })
   } catch (error) {
+    console.error('Register error:', error)
     res.status(500).json({ message: 'Server error', error: error.message })
   }
 }
@@ -137,6 +139,7 @@ const login = async (req, res) => {
       user: publicUser(user)
     })
   } catch (error) {
+    console.error('Login error:', error)
     res.status(500).json({ message: 'Server error', error: error.message })
   }
 }
