@@ -12,12 +12,14 @@ import ExternalHospital from "./pages/ExternalHospital";
 
 import MyReports from "./pages/MyReports";
 import ReportDetail from "./pages/ReportDetail";
+import Profile from './pages/Profile'
 
 function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <Routes>
+        <Route path="/profile" element={<Profile />} />
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/hospitals" element={<Hospitals />} />

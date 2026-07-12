@@ -312,4 +312,38 @@ const googleAuth = async (req, res) => {
   }
 }
 
-module.exports = { register, login, getMe, forgotPassword, resetPassword, googleAuth }
+const updateProfile = async (req, res) => {
+  try {
+    const { name, phone } = req.body
+    const userId = req.userId
+
+    if (name === undefined && phone === undefined) {
+      return res.status(400).json({ message: 'No profile fields provided' })
+    }
+
+    const data = {}
+    if (name !== undefined) data.name = name
+    if (phone !== undefined) data.phone = phone
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        profilePicture: true,
+        authProvider: true,
+        createdAt: true,
+      },
+    })
+
+    res.status(200).json({ message: 'Profile updated', user })
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message })
+  }
+}
+
+module.exports = { register, login, getMe, forgotPassword, resetPassword, googleAuth, updateProfile }

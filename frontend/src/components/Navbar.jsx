@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import useAuthStore from "../store/authStore";
 
 function Navbar() {
   const { user, logout } = useAuthStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const isAuthPage =
     location.pathname === "/login" || location.pathname === "/register";
   const isActive = (path) => location.pathname === path;
@@ -58,12 +59,15 @@ function Navbar() {
           )}
           {user ? (
             <div className="ml-2 flex items-center gap-2 rounded-full border border-gray-100 bg-gray-50 p-1">
-              <span className="flex items-center gap-2 rounded-full bg-white py-1 pl-1 pr-3 text-sm font-bold text-gray-700 shadow-sm">
+              <button
+                onClick={() => navigate('/profile')}
+                className="flex items-center gap-2 rounded-full bg-white py-1 pl-1 pr-3 text-sm font-bold text-gray-700 shadow-sm transition hover:text-teal-700"
+              >
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-teal-100 text-xs text-teal-700">
                   {userInitial}
                 </span>
                 <span className="max-w-[120px] truncate">{user.name}</span>
-              </span>
+              </button>
               <button
                 onClick={logout}
                 className="rounded-full px-3 py-1.5 text-sm font-bold text-gray-500 transition hover:bg-red-50 hover:text-red-500"
@@ -130,6 +134,16 @@ function Navbar() {
             )}
 
             <div className="grid gap-2 p-3">
+              {user && (
+                <Link
+                  to="/profile"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-extrabold text-gray-700 transition hover:bg-gray-50"
+                >
+                  <span>👤</span>
+                  <span>My Profile</span>
+                </Link>
+              )}
               <Link
                 to="/hospitals"
                 onClick={() => setMenuOpen(false)}
