@@ -112,9 +112,13 @@ export default function Profile() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
           className="bg-white rounded-2xl border border-gray-100 p-6">
           <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Account</div>
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600 mb-4">
             Manage your profile details from here.
           </div>
+          <button onClick={() => { useAuthStore.getState().logout(); navigate('/'); }}
+            className="w-full bg-red-50 text-red-500 border border-red-100 py-3 rounded-xl font-bold text-sm hover:bg-red-100 transition">
+            Logout
+          </button>
         </motion.div>
 
       </div>
