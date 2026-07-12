@@ -68,12 +68,6 @@ function Navbar() {
                 </span>
                 <span className="max-w-[120px] truncate">{user.name}</span>
               </button>
-              <button
-                onClick={logout}
-                className="rounded-full px-3 py-1.5 text-sm font-bold text-gray-500 transition hover:bg-red-50 hover:text-red-500"
-              >
-                Logout
-              </button>
             </div>
           ) : (
             <div className="ml-2 flex gap-2">
@@ -182,17 +176,7 @@ function Navbar() {
             </div>
 
             {user ? (
-              <div className="border-t border-gray-100 p-3">
-                <button
-                  onClick={() => {
-                    logout();
-                    setMenuOpen(false);
-                  }}
-                  className="w-full rounded-2xl bg-red-50 py-3 text-sm font-extrabold text-red-500 transition hover:bg-red-100"
-                >
-                  Logout
-                </button>
-              </div>
+              <div className="border-t border-gray-100 p-3" />
             ) : (
               !isAuthPage && (
                 <div className="grid grid-cols-2 gap-2 border-t border-gray-100 p-3">
