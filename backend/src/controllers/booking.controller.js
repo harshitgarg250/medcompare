@@ -1,4 +1,5 @@
 const prisma = require('../config/prisma')
+const { sendBookingConfirmation } = require('../utils/email')
 
 // Booking banao
 const createBooking = async (req, res) => {
@@ -31,6 +32,11 @@ const createBooking = async (req, res) => {
         totalPrice: parseFloat(totalPrice),
         notes,
         status: 'CONFIRMED'
+      },
+      include: {
+        user: true,
+        hospital: true,
+        test: true
       }
     })
 
@@ -38,6 +44,24 @@ const createBooking = async (req, res) => {
       where: { id: parseInt(slotId) },
       data: { isBooked: true }
     })
+
+    // Email send karo
+    try {
+      await sendBookingConfirmation({
+        to: booking.user?.email,
+        name: booking.user?.name || 'User',
+        hospitalName: booking.hospital?.name || 'Hospital',
+        testName: booking.test?.name || 'Test',
+        date: slot?.date
+          ? new Date(slot.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+          : 'N/A',
+        time: slot?.time || 'N/A',
+        price: booking.totalPrice,
+        bookingId: booking.id
+      })
+    } catch (emailError) {
+      console.log('Email failed:', emailError.message)
+    }
 
     res.status(201).json({
       message: 'Booking confirmed successfully',
@@ -48,6 +72,7 @@ const createBooking = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message })
   }
 }
+
 // User ki saari bookings
 const getUserBookings = async (req, res) => {
   try {
@@ -87,13 +112,11 @@ const cancelBooking = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized' })
     }
 
-    // Booking cancel karo
     const updated = await prisma.booking.update({
       where: { id: parseInt(id) },
       data: { status: 'CANCELLED' }
     })
 
-    // Slot free karo
     await prisma.slot.update({
       where: { id: booking.slotId },
       data: { isBooked: false }

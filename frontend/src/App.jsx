@@ -12,7 +12,9 @@ import ExternalHospital from "./pages/ExternalHospital";
 
 import MyReports from "./pages/MyReports";
 import ReportDetail from "./pages/ReportDetail";
-import Profile from './pages/Profile'
+import Profile from './pages/Profile';
+import Compare from './pages/Compare'
+
 
 function App() {
   return (
@@ -30,6 +32,7 @@ function App() {
         <Route path="/external-hospital" element={<ExternalHospital />} />
         <Route path="/reports" element={<MyReports />} />
         <Route path="/reports/:id" element={<ReportDetail />} />
+        <Route path="/compare" element={<Compare />} />
       </Routes>
     </div>
   );

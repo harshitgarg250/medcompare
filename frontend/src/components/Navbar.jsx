@@ -35,32 +35,26 @@ function Navbar() {
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-2">
-          <Link
-            to="/hospitals"
-            className={navLinkClass("/hospitals")}
-          >
+          <Link to="/hospitals" className={navLinkClass("/hospitals")}>
             Hospitals
           </Link>
           {user && (
             <>
-              <Link
-                to="/my-bookings"
-                className={navLinkClass("/my-bookings")}
-              >
+              <Link to="/my-bookings" className={navLinkClass("/my-bookings")}>
                 My Bookings
               </Link>
-              <Link
-                to="/reports"
-                className={navLinkClass("/reports")}
-              >
+              <Link to="/reports" className={navLinkClass("/reports")}>
                 📋 Reports
+              </Link>
+              <Link to="/compare" className={navLinkClass("/compare")}>
+                Compare
               </Link>
             </>
           )}
           {user ? (
             <div className="ml-2 flex items-center gap-2 rounded-full border border-gray-100 bg-gray-50 p-1">
               <button
-                onClick={() => navigate('/profile')}
+                onClick={() => navigate("/profile")}
                 className="flex items-center gap-2 rounded-full bg-white py-1 pl-1 pr-3 text-sm font-bold text-gray-700 shadow-sm transition hover:text-teal-700"
               >
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-teal-100 text-xs text-teal-700">
@@ -98,7 +92,11 @@ function Navbar() {
           aria-label="Menu"
         >
           <span>{menuOpen ? "Close" : "Menu"}</span>
-          <span className={`text-base transition ${menuOpen ? "rotate-45" : ""}`}>+</span>
+          <span
+            className={`text-base transition ${menuOpen ? "rotate-45" : ""}`}
+          >
+            +
+          </span>
         </button>
       </div>
 
@@ -121,8 +119,12 @@ function Navbar() {
                   {userInitial}
                 </span>
                 <div className="min-w-0">
-                  <div className="truncate text-sm font-extrabold text-gray-800">{user.name}</div>
-                  <div className="text-xs font-semibold text-teal-700">Signed in</div>
+                  <div className="truncate text-sm font-extrabold text-gray-800">
+                    {user.name}
+                  </div>
+                  <div className="text-xs font-semibold text-teal-700">
+                    Signed in
+                  </div>
                 </div>
               </div>
             )}
@@ -142,7 +144,9 @@ function Navbar() {
                 to="/hospitals"
                 onClick={() => setMenuOpen(false)}
                 className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-extrabold transition ${
-                  isActive("/hospitals") ? "bg-teal-50 text-teal-700" : "bg-white text-gray-700 hover:bg-gray-50"
+                  isActive("/hospitals")
+                    ? "bg-teal-50 text-teal-700"
+                    : "bg-white text-gray-700 hover:bg-gray-50"
                 }`}
               >
                 <span>Find Hospitals</span>
@@ -155,7 +159,9 @@ function Navbar() {
                     to="/my-bookings"
                     onClick={() => setMenuOpen(false)}
                     className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-extrabold transition ${
-                      isActive("/my-bookings") ? "bg-teal-50 text-teal-700" : "bg-white text-gray-700 hover:bg-gray-50"
+                      isActive("/my-bookings")
+                        ? "bg-teal-50 text-teal-700"
+                        : "bg-white text-gray-700 hover:bg-gray-50"
                     }`}
                   >
                     <span>My Bookings</span>
@@ -165,10 +171,24 @@ function Navbar() {
                     to="/reports"
                     onClick={() => setMenuOpen(false)}
                     className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-extrabold transition ${
-                      isActive("/reports") ? "bg-teal-50 text-teal-700" : "bg-white text-gray-700 hover:bg-gray-50"
+                      isActive("/reports")
+                        ? "bg-teal-50 text-teal-700"
+                        : "bg-white text-gray-700 hover:bg-gray-50"
                     }`}
                   >
                     <span>📋 Reports</span>
+                    <span className="text-lg">→</span>
+                  </Link>
+                  <Link
+                    to="/compare"
+                    onClick={() => setMenuOpen(false)}
+                    className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-extrabold transition ${
+                      isActive("/compare")
+                        ? "bg-teal-50 text-teal-700"
+                        : "bg-white text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <span>⚖️ Compare Prices</span>
                     <span className="text-lg">→</span>
                   </Link>
                 </>
