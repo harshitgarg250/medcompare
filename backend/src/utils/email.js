@@ -1,17 +1,11 @@
-const nodemailer = require('nodemailer')
+const { Resend } = require('resend')
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-})
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 const sendBookingConfirmation = async ({ to, name, hospitalName, testName, date, time, price, bookingId }) => {
   try {
-    await transporter.sendMail({
-      from: `"MedCompare" <${process.env.EMAIL_USER}>`,
+    await resend.emails.send({
+      from: 'MedCompare <onboarding@resend.dev>',
       to,
       subject: `Booking Confirmed — ${testName} at ${hospitalName}`,
       html: `
@@ -71,15 +65,14 @@ const sendBookingConfirmation = async ({ to, name, hospitalName, testName, date,
           </div>
 
           <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 0;">
-            MedCompare · Compare diagnostic test prices across hospitals<br/>
-            <a href="https://medcompare-frontend.vercel.app" style="color: #0d9488;">medcompare-frontend.vercel.app</a>
+            MedCompare · Compare diagnostic test prices across hospitals
           </p>
         </div>
       `
     })
-    console.log('Email sent to:', to)
+    console.log('✅ Email sent to:', to)
   } catch (error) {
-    console.log('Email error:', error.message)
+    console.log('❌ Email error:', error.message)
   }
 }
 
