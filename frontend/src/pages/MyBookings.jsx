@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -11,22 +12,44 @@ const statusColor = {
 };
 
 const statusIcon = { CONFIRMED: "✅", CANCELLED: "❌", PENDING: "⏳" };
+const CANCEL_REASONS = [
+  "Schedule changed",
+  "Found better price elsewhere",
+  "Doctor advised not needed",
+  "Personal emergency",
+  "Other",
+];
 
 export default function MyBookings() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [cancelModal, setCancelModal] = useState(null);
+  const [cancelReason, setCancelReason] = useState("");
 
   const { data: bookings, isLoading } = useQuery({
     queryKey: ["my-bookings"],
-    queryFn: () => API.get("/bookings/my").then(r => r.data),
+    queryFn: () => API.get("/bookings/my").then((r) => r.data),
   });
 
-  const handleCancel = async (id) => {
-    if (!confirm("Cancel this booking?")) return;
+  const handleCancelWithReason = (bookingId) => {
+    setCancelModal(bookingId);
+    setCancelReason("");
+  };
+
+  const confirmCancel = async () => {
+    if (!cancelReason) {
+      toast.error("Please select a reason");
+      return;
+    }
+
     try {
-      await API.patch(`/bookings/${id}/cancel`);
+      await API.patch(`/bookings/${cancelModal}/cancel`, {
+        reason: cancelReason,
+      });
       toast.success("Booking cancelled");
       queryClient.invalidateQueries(["my-bookings"]);
+      setCancelModal(null);
+      setCancelReason("");
     } catch {
       toast.error("Could not cancel booking");
     }
@@ -42,32 +65,91 @@ export default function MyBookings() {
     }
   };
 
-  if (isLoading) return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="h-8 bg-gray-200 rounded w-48 mb-6 animate-pulse" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1,2,3].map(i => (
-            <div key={i} className="bg-white rounded-2xl p-5 animate-pulse border border-gray-100">
-              <div className="h-4 bg-gray-200 rounded w-3/4 mb-3" />
-              <div className="h-3 bg-gray-200 rounded w-1/2" />
-            </div>
-          ))}
+  if (isLoading)
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="h-8 bg-gray-200 rounded w-48 mb-6 animate-pulse" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="bg-white rounded-2xl p-5 animate-pulse border border-gray-100"
+              >
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-3" />
+                <div className="h-3 bg-gray-200 rounded w-1/2" />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {cancelModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+          >
+            <h3 className="font-extrabold text-gray-800 text-lg mb-1">
+              Cancel Booking
+            </h3>
+            <p className="text-gray-400 text-sm mb-4">
+              Please select a reason for cancellation
+            </p>
+
+            <div className="space-y-2 mb-5">
+              {CANCEL_REASONS.map((reason) => (
+                <button
+                  key={reason}
+                  onClick={() => setCancelReason(reason)}
+                  className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium border transition ${
+                    cancelReason === reason
+                      ? "bg-red-50 border-red-300 text-red-700"
+                      : "bg-gray-50 border-gray-200 text-gray-700 hover:border-red-200"
+                  }`}
+                >
+                  {cancelReason === reason ? "🔴 " : "⚪ "}
+                  {reason}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setCancelModal(null)}
+                className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-sm font-bold hover:bg-gray-50 transition"
+              >
+                Keep Booking
+              </button>
+              <button
+                onClick={confirmCancel}
+                className="flex-1 bg-red-500 text-white py-3 rounded-xl text-sm font-bold hover:bg-red-600 transition"
+              >
+                Cancel Booking
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       <div className="bg-white border-b border-gray-100 px-4 sm:px-6 lg:px-8 py-6">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-extrabold text-gray-800">My Bookings</h1>
-            <p className="text-gray-400 text-sm mt-1">{bookings?.length || 0} total appointments</p>
+            <h1 className="text-2xl font-extrabold text-gray-800">
+              My Bookings
+            </h1>
+            <p className="text-gray-400 text-sm mt-1">
+              {bookings?.length || 0} total appointments
+            </p>
           </div>
-          <button onClick={() => navigate("/hospitals")}
-            className="bg-teal-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-teal-700 transition">
+          <button
+            onClick={() => navigate("/hospitals")}
+            className="bg-teal-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-teal-700 transition"
+          >
             + Book New Test
           </button>
         </div>
@@ -77,10 +159,16 @@ export default function MyBookings() {
         {bookings?.length === 0 && (
           <div className="text-center py-20">
             <div className="text-5xl mb-4">📋</div>
-            <h3 className="font-bold text-gray-700 text-lg mb-2">No bookings yet</h3>
-            <p className="text-gray-400 text-sm mb-6">Book a diagnostic test to see it here</p>
-            <button onClick={() => navigate("/hospitals")}
-              className="bg-teal-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-teal-700 transition">
+            <h3 className="font-bold text-gray-700 text-lg mb-2">
+              No bookings yet
+            </h3>
+            <p className="text-gray-400 text-sm mb-6">
+              Book a diagnostic test to see it here
+            </p>
+            <button
+              onClick={() => navigate("/hospitals")}
+              className="bg-teal-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-teal-700 transition"
+            >
               Find Hospitals →
             </button>
           </div>
@@ -88,7 +176,9 @@ export default function MyBookings() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {bookings?.map((booking, i) => {
-            const slotDate = booking.slot?.date ? new Date(booking.slot.date) : null;
+            const slotDate = booking.slot?.date
+              ? new Date(booking.slot.date)
+              : null;
             const slotTime = booking.slot?.time || "9:00 AM";
             let reportAvailableAt = null;
 
@@ -99,28 +189,44 @@ export default function MyBookings() {
               if (meridiem === "AM" && hours === 12) hours = 0;
               const testDateTime = new Date(slotDate);
               testDateTime.setHours(hours, minutes, 0, 0);
-              reportAvailableAt = new Date(testDateTime.getTime() + 2 * 60 * 60 * 1000);
+              reportAvailableAt = new Date(
+                testDateTime.getTime() + 2 * 60 * 60 * 1000,
+              );
             }
 
             const now = new Date();
             const isTestDone = slotDate && slotDate < now;
             const isReportReady = reportAvailableAt && reportAvailableAt < now;
-            const minutesLeft = reportAvailableAt ? Math.ceil((reportAvailableAt - now) / 60000) : 0;
+            const minutesLeft = reportAvailableAt
+              ? Math.ceil((reportAvailableAt - now) / 60000)
+              : 0;
 
             return (
-              <motion.div key={booking.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                className="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition">
-
+              <motion.div
+                key={booking.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.04 }}
+                className="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition"
+              >
                 {/* Header */}
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex gap-3 items-start">
-                    <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center text-xl shrink-0">🏥</div>
+                    <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center text-xl shrink-0">
+                      🏥
+                    </div>
                     <div>
-                      <h3 className="font-bold text-gray-800 text-sm leading-tight">{booking.hospital?.name}</h3>
-                      <p className="text-xs text-gray-400 mt-0.5">{booking.test?.name}</p>
+                      <h3 className="font-bold text-gray-800 text-sm leading-tight">
+                        {booking.hospital?.name}
+                      </h3>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {booking.test?.name}
+                      </p>
                     </div>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-bold shrink-0 ${statusColor[booking.status] || "bg-gray-100 text-gray-600"}`}>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-bold shrink-0 ${statusColor[booking.status] || "bg-gray-100 text-gray-600"}`}
+                  >
                     {statusIcon[booking.status]} {booking.status}
                   </span>
                 </div>
@@ -130,20 +236,34 @@ export default function MyBookings() {
                   <div className="bg-gray-50 rounded-xl p-2.5">
                     <div className="text-xs text-gray-400 mb-0.5">Date</div>
                     <div className="text-xs font-bold text-gray-700">
-                      {slotDate ? slotDate.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "N/A"}
+                      {slotDate
+                        ? slotDate.toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })
+                        : "N/A"}
                     </div>
                   </div>
                   <div className="bg-gray-50 rounded-xl p-2.5">
                     <div className="text-xs text-gray-400 mb-0.5">Time</div>
-                    <div className="text-xs font-bold text-gray-700">{booking.slot?.time || "N/A"}</div>
+                    <div className="text-xs font-bold text-gray-700">
+                      {booking.slot?.time || "N/A"}
+                    </div>
                   </div>
                   <div className="bg-gray-50 rounded-xl p-2.5">
                     <div className="text-xs text-gray-400 mb-0.5">Amount</div>
-                    <div className="text-sm font-extrabold text-teal-600">₹{booking.totalPrice}</div>
+                    <div className="text-sm font-extrabold text-teal-600">
+                      ₹{booking.totalPrice}
+                    </div>
                   </div>
                   <div className="bg-gray-50 rounded-xl p-2.5">
-                    <div className="text-xs text-gray-400 mb-0.5">Booking ID</div>
-                    <div className="text-xs font-bold text-gray-700">#{booking.id}</div>
+                    <div className="text-xs text-gray-400 mb-0.5">
+                      Booking ID
+                    </div>
+                    <div className="text-xs font-bold text-gray-700">
+                      #{booking.id}
+                    </div>
                   </div>
                 </div>
 
@@ -155,32 +275,39 @@ export default function MyBookings() {
 
                 {/* Action buttons */}
                 <div className="flex gap-2 flex-wrap">
-                  <button onClick={() => navigate(`/hospitals/${booking.hospitalId}`)}
-                    className="flex-1 border border-gray-200 text-gray-600 py-2 rounded-xl text-xs font-semibold hover:border-teal-400 hover:text-teal-600 transition">
+                  <button
+                    onClick={() => navigate(`/hospitals/${booking.hospitalId}`)}
+                    className="flex-1 border border-gray-200 text-gray-600 py-2 rounded-xl text-xs font-semibold hover:border-teal-400 hover:text-teal-600 transition"
+                  >
                     View Hospital
                   </button>
                   {booking.status === "CONFIRMED" && !isTestDone && (
-                    <button onClick={() => handleCancel(booking.id)}
-                      className="flex-1 bg-red-50 text-red-500 py-2 rounded-xl text-xs font-semibold hover:bg-red-100 transition">
+                    <button
+                      onClick={() => handleCancelWithReason(booking.id)}
+                      className="flex-1 bg-red-50 text-red-500 py-2 rounded-xl text-xs font-semibold hover:bg-red-100 transition"
+                    >
                       Cancel
                     </button>
                   )}
                 </div>
 
                 {/* Report button */}
-                {booking.status === "CONFIRMED" && isTestDone && (
-                  isReportReady ? (
-                    <button onClick={() => handleGenerateReport(booking.id)}
-                      className="w-full mt-2 bg-gradient-to-r from-teal-500 to-blue-500 text-white py-2.5 rounded-xl text-xs font-bold hover:opacity-90 transition">
+                {booking.status === "CONFIRMED" &&
+                  isTestDone &&
+                  (isReportReady ? (
+                    <button
+                      onClick={() => handleGenerateReport(booking.id)}
+                      className="w-full mt-2 bg-gradient-to-r from-teal-500 to-blue-500 text-white py-2.5 rounded-xl text-xs font-bold hover:opacity-90 transition"
+                    >
                       📋 View Report
                     </button>
                   ) : (
                     <div className="w-full mt-2 bg-amber-50 border border-amber-200 text-amber-700 py-2.5 px-3 rounded-xl text-xs font-medium text-center">
                       ⏳ Report processing...
-                      {minutesLeft > 0 && ` Ready in ~${minutesLeft < 60 ? `${minutesLeft} min` : `${Math.ceil(minutesLeft / 60)} hr`}`}
+                      {minutesLeft > 0 &&
+                        ` Ready in ~${minutesLeft < 60 ? `${minutesLeft} min` : `${Math.ceil(minutesLeft / 60)} hr`}`}
                     </div>
-                  )
-                )}
+                  ))}
               </motion.div>
             );
           })}

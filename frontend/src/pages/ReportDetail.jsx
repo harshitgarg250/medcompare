@@ -1,78 +1,84 @@
-import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { motion } from 'framer-motion'
-import { useRef } from 'react'
-import toast from 'react-hot-toast'
-import API from '../services/api'
-import html2pdf from 'html2pdf.js'
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import { useRef } from "react";
+import toast from "react-hot-toast";
+import API from "../services/api";
+import html2pdf from "html2pdf.js";
 
 const statusBadge = {
-  NORMAL: 'bg-green-100 text-green-700',
-  HIGH: 'bg-red-100 text-red-700',
-  LOW: 'bg-blue-100 text-blue-700',
-  CRITICAL: 'bg-red-200 text-red-800 font-extrabold'
-}
+  NORMAL: "bg-green-100 text-green-700",
+  HIGH: "bg-red-100 text-red-700",
+  LOW: "bg-blue-100 text-blue-700",
+  CRITICAL: "bg-red-200 text-red-800 font-extrabold",
+};
 
 const trendIcon = {
-  IMPROVED: '📈 Improved',
-  STABLE: '➡️ Stable',
-  WORSENED: '📉 Worsened'
-}
+  IMPROVED: "📈 Improved",
+  STABLE: "➡️ Stable",
+  WORSENED: "📉 Worsened",
+};
 
 const riskBg = {
-  LOW: 'bg-green-50 border-green-200 text-green-700',
-  MEDIUM: 'bg-amber-50 border-amber-200 text-amber-700',
-  HIGH: 'bg-red-50 border-red-200 text-red-700'
-}
+  LOW: "bg-green-50 border-green-200 text-green-700",
+  MEDIUM: "bg-amber-50 border-amber-200 text-amber-700",
+  HIGH: "bg-red-50 border-red-200 text-red-700",
+};
 
 export default function ReportDetail() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const printRef = useRef()
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const printRef = useRef();
 
   const { data: report, isLoading } = useQuery({
-    queryKey: ['report', id],
-    queryFn: () => API.get(`/reports/${id}`).then(r => r.data)
-  })
+    queryKey: ["report", id],
+    queryFn: () => API.get(`/reports/${id}`).then((r) => r.data),
+  });
 
-  const handlePrint = () => window.print()
+  const handlePrint = () => window.print();
 
   const handleDownloadPDF = async () => {
-    const element = printRef.current
+    const element = printRef.current;
     const opt = {
       margin: 0.5,
       filename: `MedCompare-Report-${report.reportId}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
+      image: { type: "jpeg", quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-    }
-    html2pdf().set(opt).from(element).save()
-  }
+      jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+    };
+    html2pdf().set(opt).from(element).save();
+  };
 
-  if (isLoading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
-        <div className="text-3xl mb-2">📋</div>
-        <p className="text-gray-400 text-sm">Loading report...</p>
+  if (isLoading)
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-3xl mb-2">📋</div>
+          <p className="text-gray-400 text-sm">Loading report...</p>
+        </div>
       </div>
-    </div>
-  )
+    );
 
-  if (!report) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
-        <div className="text-3xl mb-2">❌</div>
-        <p className="text-gray-600 font-bold">Report not found</p>
-        <button onClick={() => navigate('/reports')} className="mt-3 text-teal-600 text-sm">← Back to Reports</button>
+  if (!report)
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-3xl mb-2">❌</div>
+          <p className="text-gray-600 font-bold">Report not found</p>
+          <button
+            onClick={() => navigate("/reports")}
+            className="mt-3 text-teal-600 text-sm"
+          >
+            ← Back to Reports
+          </button>
+        </div>
       </div>
-    </div>
-  )
+    );
 
-  const abnormal = report.results?.filter(r => r.status !== 'NORMAL') || []
+  const abnormal = report.results?.filter((r) => r.status !== "NORMAL") || [];
 
   return (
     <div className="min-h-screen bg-gray-50">
-
       {/* Print styles */}
       <style>{`
         @media print {
@@ -85,7 +91,10 @@ export default function ReportDetail() {
       {/* Top bar */}
       <div className="bg-white border-b border-gray-100 px-4 py-4 no-print">
         <div className="max-w-3xl mx-auto flex justify-between items-center">
-          <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-teal-600 text-sm flex items-center gap-1">
+          <button
+            onClick={() => navigate(-1)}
+            className="text-gray-400 hover:text-teal-600 text-sm flex items-center gap-1"
+          >
             ← Back
           </button>
           <div className="flex gap-2">
@@ -97,9 +106,9 @@ export default function ReportDetail() {
             </button>
             <button
               onClick={() => {
-                const url = window.location.href
-                navigator.clipboard.writeText(url)
-                alert('Report link copied!')
+                const url = window.location.href;
+                navigator.clipboard.writeText(url);
+                alert("Report link copied!");
               }}
               className="flex items-center gap-1.5 bg-teal-50 text-teal-600 px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-100 transition"
             >
@@ -110,7 +119,6 @@ export default function ReportDetail() {
       </div>
 
       <div ref={printRef} className="max-w-3xl mx-auto px-4 py-5 space-y-4">
-
         {/* Report Header */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -119,16 +127,29 @@ export default function ReportDetail() {
         >
           <div className="flex justify-between items-start">
             <div>
-              <div className="text-xs opacity-70 mb-1">🏥 {report.hospital?.name}</div>
-              <h1 className="text-xl font-extrabold mb-1">{report.test?.name}</h1>
-              <div className="text-xs opacity-80">Report ID: {report.reportId}</div>
+              <div className="text-xs opacity-70 mb-1">
+                🏥 {report.hospital?.name}
+              </div>
+              <h1 className="text-xl font-extrabold mb-1">
+                {report.test?.name}
+              </h1>
+              <div className="text-xs opacity-80">
+                Report ID: {report.reportId}
+              </div>
             </div>
             <div className="text-right">
-              <div className={`px-3 py-1 rounded-full text-xs font-bold ${report.status === 'COMPLETED' ? 'bg-green-400 text-white' : 'bg-amber-400 text-white'}`}>
+              <div
+                className={`px-3 py-1 rounded-full text-xs font-bold ${report.status === "COMPLETED" ? "bg-green-400 text-white" : "bg-amber-400 text-white"}`}
+              >
                 {report.status}
               </div>
               <div className="text-xs opacity-70 mt-2">
-                {report.reportGeneratedAt ? new Date(report.reportGeneratedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '--'}
+                {report.reportGeneratedAt
+                  ? new Date(report.reportGeneratedAt).toLocaleDateString(
+                      "en-IN",
+                      { day: "numeric", month: "short", year: "numeric" },
+                    )
+                  : "--"}
               </div>
             </div>
           </div>
@@ -143,17 +164,24 @@ export default function ReportDetail() {
             transition={{ delay: 0.05 }}
             className="bg-white rounded-2xl border border-gray-100 p-4 print-card"
           >
-            <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Patient Info</div>
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+              Patient Info
+            </div>
             <div className="space-y-2">
               {[
-                { label: 'Name', value: report.user?.name },
-                { label: 'Email', value: report.user?.email },
-                { label: 'Phone', value: report.user?.phone || '--' },
-                { label: 'Sample Type', value: report.sampleType },
-              ].map(item => (
-                <div key={item.label} className="flex justify-between text-xs py-1 border-b border-gray-50">
+                { label: "Name", value: report.user?.name },
+                { label: "Email", value: report.user?.email },
+                { label: "Phone", value: report.user?.phone || "--" },
+                { label: "Sample Type", value: report.sampleType },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="flex justify-between text-xs py-1 border-b border-gray-50"
+                >
                   <span className="text-gray-400">{item.label}</span>
-                  <span className="text-gray-700 font-medium text-right max-w-[160px] truncate">{item.value || '--'}</span>
+                  <span className="text-gray-700 font-medium text-right max-w-[160px] truncate">
+                    {item.value || "--"}
+                  </span>
                 </div>
               ))}
             </div>
@@ -166,17 +194,24 @@ export default function ReportDetail() {
             transition={{ delay: 0.08 }}
             className="bg-white rounded-2xl border border-gray-100 p-4 print-card"
           >
-            <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Lab Info</div>
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+              Lab Info
+            </div>
             <div className="space-y-2">
               {[
-                { label: 'Lab', value: report.hospital?.name },
-                { label: 'Doctor', value: report.doctorName },
-                { label: 'Technician', value: report.technicianName },
-                { label: 'NABL', value: '✅ Accredited' },
-              ].map(item => (
-                <div key={item.label} className="flex justify-between text-xs py-1 border-b border-gray-50">
+                { label: "Lab", value: report.hospital?.name },
+                { label: "Doctor", value: report.doctorName },
+                { label: "Technician", value: report.technicianName },
+                { label: "NABL", value: "✅ Accredited" },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="flex justify-between text-xs py-1 border-b border-gray-50"
+                >
                   <span className="text-gray-400">{item.label}</span>
-                  <span className="text-gray-700 font-medium">{item.value || '--'}</span>
+                  <span className="text-gray-700 font-medium">
+                    {item.value || "--"}
+                  </span>
                 </div>
               ))}
             </div>
@@ -190,20 +225,35 @@ export default function ReportDetail() {
           transition={{ delay: 0.1 }}
           className="bg-white rounded-2xl border border-gray-100 p-4 print-card"
         >
-          <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Sample Timeline</div>
+          <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+            Sample Timeline
+          </div>
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: 'Collected', date: report.sampleCollectedAt },
-              { label: 'Received', date: report.sampleReceivedAt },
-              { label: 'Generated', date: report.reportGeneratedAt },
-            ].map(item => (
-              <div key={item.label} className="bg-gray-50 rounded-xl p-2.5 text-center">
+              { label: "Collected", date: report.sampleCollectedAt },
+              { label: "Received", date: report.sampleReceivedAt },
+              { label: "Generated", date: report.reportGeneratedAt },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="bg-gray-50 rounded-xl p-2.5 text-center"
+              >
                 <div className="text-xs text-gray-400 mb-1">{item.label}</div>
                 <div className="text-xs font-bold text-gray-700">
-                  {item.date ? new Date(item.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '--'}
+                  {item.date
+                    ? new Date(item.date).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                      })
+                    : "--"}
                 </div>
                 <div className="text-xs text-gray-400">
-                  {item.date ? new Date(item.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '--'}
+                  {item.date
+                    ? new Date(item.date).toLocaleTimeString("en-IN", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : "--"}
                 </div>
               </div>
             ))}
@@ -219,8 +269,12 @@ export default function ReportDetail() {
             className="grid grid-cols-2 gap-4"
           >
             <div className="bg-white rounded-2xl border border-gray-100 p-4 text-center print-card">
-              <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Health Score</div>
-              <div className="text-4xl font-extrabold text-teal-600">{report.healthScore || '--'}</div>
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
+                Health Score
+              </div>
+              <div className="text-4xl font-extrabold text-teal-600">
+                {report.healthScore || "--"}
+              </div>
               <div className="text-xs text-gray-400 mt-1">out of 100</div>
               <div className="mt-2 bg-gray-200 rounded-full h-2">
                 <div
@@ -229,12 +283,22 @@ export default function ReportDetail() {
                 />
               </div>
             </div>
-            <div className={`rounded-2xl border p-4 text-center print-card ${riskBg[report.riskLevel] || 'bg-gray-50 border-gray-200 text-gray-700'}`}>
-              <div className="text-xs font-bold uppercase tracking-widest mb-2 opacity-70">Risk Level</div>
-              <div className="text-2xl mb-1">
-                {report.riskLevel === 'LOW' ? '✅' : report.riskLevel === 'MEDIUM' ? '⚠️' : '🚨'}
+            <div
+              className={`rounded-2xl border p-4 text-center print-card ${riskBg[report.riskLevel] || "bg-gray-50 border-gray-200 text-gray-700"}`}
+            >
+              <div className="text-xs font-bold uppercase tracking-widest mb-2 opacity-70">
+                Risk Level
               </div>
-              <div className="text-xl font-extrabold">{report.riskLevel || '--'}</div>
+              <div className="text-2xl mb-1">
+                {report.riskLevel === "LOW"
+                  ? "✅"
+                  : report.riskLevel === "MEDIUM"
+                    ? "⚠️"
+                    : "🚨"}
+              </div>
+              <div className="text-xl font-extrabold">
+                {report.riskLevel || "--"}
+              </div>
               <div className="text-xs opacity-70 mt-1">Risk Assessment</div>
             </div>
           </motion.div>
@@ -248,7 +312,9 @@ export default function ReportDetail() {
           className="bg-white rounded-2xl border border-gray-100 overflow-hidden print-card"
         >
           <div className="px-4 py-3 border-b border-gray-100 flex justify-between items-center">
-            <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">Test Results</div>
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+              Test Results
+            </div>
             {abnormal.length > 0 && (
               <span className="bg-red-100 text-red-600 px-2 py-0.5 rounded-full text-xs font-bold">
                 {abnormal.length} Abnormal
@@ -272,23 +338,34 @@ export default function ReportDetail() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: i * 0.03 }}
-                className={`grid grid-cols-12 gap-2 px-4 py-3 items-center text-xs ${r.status !== 'NORMAL' ? 'bg-red-50' : ''}`}
+                className={`grid grid-cols-12 gap-2 px-4 py-3 items-center text-xs ${r.status !== "NORMAL" ? "bg-red-50" : ""}`}
               >
                 <div className="col-span-4 font-medium text-gray-700">
                   {r.parameterName}
                   {r.previousValue && (
                     <div className="text-gray-400 text-xs mt-0.5">
-                      Prev: {r.previousValue} {r.trend && <span className="text-xs">{trendIcon[r.trend]}</span>}
+                      Prev: {r.previousValue}{" "}
+                      {r.trend && (
+                        <span className="text-xs">{trendIcon[r.trend]}</span>
+                      )}
                     </div>
                   )}
                 </div>
-                <div className={`col-span-2 text-center font-bold ${r.status !== 'NORMAL' ? 'text-red-600' : 'text-gray-800'}`}>
+                <div
+                  className={`col-span-2 text-center font-bold ${r.status !== "NORMAL" ? "text-red-600" : "text-gray-800"}`}
+                >
                   {r.value}
                 </div>
-                <div className="col-span-2 text-center text-gray-400">{r.unit || '--'}</div>
-                <div className="col-span-2 text-center text-gray-400">{r.referenceRange || '--'}</div>
+                <div className="col-span-2 text-center text-gray-400">
+                  {r.unit || "--"}
+                </div>
+                <div className="col-span-2 text-center text-gray-400">
+                  {r.referenceRange || "--"}
+                </div>
                 <div className="col-span-2 text-center">
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${statusBadge[r.status] || 'bg-gray-100 text-gray-600'}`}>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-xs font-bold ${statusBadge[r.status] || "bg-gray-100 text-gray-600"}`}
+                  >
                     {r.status}
                   </span>
                 </div>
@@ -309,19 +386,32 @@ export default function ReportDetail() {
               ⚠️ Abnormal Values — Health Insights
             </div>
             <div className="space-y-3">
-              {abnormal.map(r => (
-                <div key={r.id} className="bg-white rounded-xl p-3 border border-amber-100">
-                  <div className="font-bold text-gray-800 text-xs mb-1">{r.parameterName}</div>
+              {abnormal.map((r) => (
+                <div
+                  key={r.id}
+                  className="bg-white rounded-xl p-3 border border-amber-100"
+                >
+                  <div className="font-bold text-gray-800 text-xs mb-1">
+                    {r.parameterName}
+                  </div>
                   <div className="text-xs text-gray-600 mb-1">
-                    Value: <span className="font-bold text-red-600">{r.value} {r.unit}</span>
-                    {r.referenceRange && <span className="text-gray-400"> (Normal: {r.referenceRange})</span>}
+                    Value:{" "}
+                    <span className="font-bold text-red-600">
+                      {r.value} {r.unit}
+                    </span>
+                    {r.referenceRange && (
+                      <span className="text-gray-400">
+                        {" "}
+                        (Normal: {r.referenceRange})
+                      </span>
+                    )}
                   </div>
                   <div className="text-xs text-gray-500">
-                    {r.status === 'HIGH'
-                      ? '📊 Value is above normal range. Please consult your doctor.'
-                      : r.status === 'LOW'
-                      ? '📉 Value is below normal range. Please consult your doctor.'
-                      : '⚠️ Critical value detected. Immediate medical attention recommended.'}
+                    {r.status === "HIGH"
+                      ? "📊 Value is above normal range. Please consult your doctor."
+                      : r.status === "LOW"
+                        ? "📉 Value is below normal range. Please consult your doctor."
+                        : "⚠️ Critical value detected. Immediate medical attention recommended."}
                   </div>
                 </div>
               ))}
@@ -350,7 +440,9 @@ export default function ReportDetail() {
             </div>
             <div className="flex items-start gap-2">
               <span className="text-teal-500 shrink-0">✓</span>
-              <span>Maintain a healthy diet, regular exercise and adequate sleep</span>
+              <span>
+                Maintain a healthy diet, regular exercise and adequate sleep
+              </span>
             </div>
             {report.notes && (
               <div className="flex items-start gap-2">
@@ -371,13 +463,21 @@ export default function ReportDetail() {
           <div className="flex justify-between items-end">
             <div>
               <div className="text-xs text-gray-400 mb-1">Verified by</div>
-              <div className="font-bold text-gray-800 text-sm">{report.doctorName}</div>
-              <div className="text-xs text-gray-400">{report.hospital?.name}</div>
-              <div className="text-xs text-teal-600 mt-1">✅ NABL Accredited Lab</div>
+              <div className="font-bold text-gray-800 text-sm">
+                {report.doctorName}
+              </div>
+              <div className="text-xs text-gray-400">
+                {report.hospital?.name}
+              </div>
+              <div className="text-xs text-teal-600 mt-1">
+                ✅ NABL Accredited Lab
+              </div>
             </div>
             <div className="text-right">
               <div className="text-xs text-gray-400 mb-1">Report ID</div>
-              <div className="font-mono text-xs font-bold text-gray-600">{report.reportId}</div>
+              <div className="font-mono text-xs font-bold text-gray-600">
+                {report.reportId}
+              </div>
               <div className="text-xs text-gray-400 mt-1">Scan to verify</div>
               <div className="text-2xl mt-1">📱</div>
             </div>
@@ -400,15 +500,19 @@ export default function ReportDetail() {
           </button>
           <button
             onClick={() => {
-              navigator.clipboard.writeText(window.location.href)
-              toast.success('Report link copied!')
+              const url = window.location.href;
+              const text = `My medical report from MedCompare: ${url}`;
+              window.open(
+                `https://wa.me/?text=${encodeURIComponent(text)}`,
+                "_blank",
+              );
             }}
-            className="flex-1 bg-teal-50 text-teal-600 py-3 rounded-xl text-sm font-bold hover:bg-teal-100 transition"
+            className="flex-1 bg-green-50 text-green-600 py-3 rounded-xl text-sm font-bold hover:bg-green-100 transition"
           >
-            🔗 Share
+            💬 WhatsApp
           </button>
           <button
-            onClick={() => navigate('/hospitals')}
+            onClick={() => navigate("/hospitals")}
             className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-sm font-bold hover:border-teal-400 transition"
           >
             Book Another
@@ -416,5 +520,5 @@ export default function ReportDetail() {
         </div>
       </div>
     </div>
-  )
+  );
 }
