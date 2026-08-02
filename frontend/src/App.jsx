@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
+import AiAssistant from "./pages/AiAssistant";
 import Hospitals from "./pages/Hospitals";
 import HospitalDetail from "./pages/HospitalDetail";
 import Booking from "./pages/Booking";
@@ -16,6 +17,7 @@ import Profile from './pages/Profile';
 import Compare from './pages/Compare'
 
 
+
 function App() {
   return (
     <div className="min-h-screen bg-gray-50">
@@ -23,6 +25,7 @@ function App() {
       <Routes>
         <Route path="/profile" element={<Profile />} />
         <Route path="/" element={<Landing />} />
+        <Route path="/ai" element={<AiAssistant />} />
         <Route path="/login" element={<Login />} />
         <Route path="/hospitals" element={<Hospitals />} />
         <Route path="/hospitals/:id" element={<HospitalDetail />} />

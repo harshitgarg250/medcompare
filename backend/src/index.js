@@ -1,35 +1,49 @@
-const express = require('express')
-const cors = require('cors')
-require('dotenv').config()
+const express = require("express");
+const cors = require("cors");
+require("dotenv").config();
 
-const authRoutes = require('./routes/auth.routes')
-const hospitalRoutes = require('./routes/hospital.routes')
-const testRoutes = require('./routes/test.routes')
-const bookingRoutes = require('./routes/booking.routes')
-const slotRoutes = require('./routes/slot.routes')
-const reportRoutes = require('./routes/report.routes')
-const reviewRoutes = require('./routes/review.routes')
+const { connectDB } = require("./config/prisma");
 
+const authRoutes = require("./routes/auth.routes");
+const hospitalRoutes = require("./routes/hospital.routes");
+const testRoutes = require("./routes/test.routes");
+const bookingRoutes = require("./routes/booking.routes");
+const slotRoutes = require("./routes/slot.routes");
+const reportRoutes = require("./routes/report.routes");
+const reviewRoutes = require("./routes/review.routes");
+const aiRoutes = require("./routes/ai.routes");
 
-const app = express()
-const PORT = process.env.PORT || 5001
+const app = express();
+const PORT = process.env.PORT || 5001;
 
-app.use(cors())
-app.use(express.json())
+app.use(cors());
+app.use(express.json());
 
 // Routes
-app.use('/api/auth', authRoutes)
-app.use('/api/hospitals', hospitalRoutes)
-app.use('/api/tests', testRoutes)
-app.use('/api/bookings', bookingRoutes)
-app.use('/api/slots', slotRoutes)
-app.use('/api/reports', reportRoutes)
-app.use('/api/reviews', reviewRoutes) 
-app.get('/', (req, res) => {
-  res.json({ message: 'MedCompare API is running 🚀' })
-})
-app.use('/api/reviews', reviewRoutes)
+app.use("/api/auth", authRoutes);
+app.use("/api/hospitals", hospitalRoutes);
+app.use("/api/tests", testRoutes);
+app.use("/api/bookings", bookingRoutes);
+app.use("/api/slots", slotRoutes);
+app.use("/api/reports", reportRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/ai", aiRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
-})
+app.get("/", (req, res) => {
+  res.json({
+    message: "MedCompare API is running 🚀",
+  });
+});
+
+// Start Server
+(async () => {
+  try {
+    await connectDB();
+
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+  }
+})();

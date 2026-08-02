@@ -1,10 +1,13 @@
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
+
 model User {
   id                   Int       @id @default(autoincrement())
   name                 String
@@ -22,6 +25,7 @@ model User {
   bookings             Booking[]
   reviews              Review[]
   reports              Report[]
+  aIConversations      AIConversation[]
 }
 
 enum Role {
@@ -31,134 +35,103 @@ enum Role {
 }
 
 model Hospital {
-  id          Int           @id @default(autoincrement())
-  name        String
-  type        String
-  address     String
-  city        String
-  lat         Float
-  lng         Float
-  phone       String?
-  email       String?
-  rating      Float         @default(0)
-  isVerified  Boolean       @default(false)
-  isOpen      Boolean       @default(true)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  tests       TestPrice[]
-  slots       Slot[]
-  bookings    Booking[]
-  reviews     Review[]
-  reports     Report[]
+  id                   Int           @id @default(autoincrement())
+  name                 String
+  type                 String
+  address              String
+  city                 String
+  lat                  Float
+  lng                  Float
+  phone                String?
+  email                String?
+  rating               Float         @default(0)
+  isVerified           Boolean       @default(false)
+  isOpen               Boolean       @default(true)
+  homeServiceAvailable Boolean       @default(false)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  tests                TestPrice[]
+  slots                Slot[]
+  bookings             Booking[]
+  reviews              Review[]
+  reports              Report[]
+}
+
+model TestPrice {
+  id         Int      @id @default(autoincrement())
+  testId     Int
+  test       Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  hospitalId Int
+  hospital   Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  price      Float
+  testName   String?
+
+  @@unique([testId, hospitalId])
 }
 
 model Test {
   id          Int         @id @default(autoincrement())
   name        String      @unique
   description String?
-  category    String
-  createdAt   DateTime    @default(now())
   prices      TestPrice[]
-  bookings    Booking[]
-  reports     Report[]
-}
-
-model TestPrice {
-  id         Int      @id @default(autoincrement())
-  price      Float
-  duration   String
-  reportTime String
-  hospital   Hospital @relation(fields: [hospitalId], references: [id])
-  hospitalId Int
-  test       Test     @relation(fields: [testId], references: [id])
-  testId     Int
-  createdAt  DateTime @default(now())
-
-  @@unique([hospitalId, testId])
 }
 
 model Slot {
-  id         Int        @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
+  hospitalId Int
+  hospital   Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
   date       DateTime
   time       String
-  isBooked   Boolean    @default(false)
-  hospital   Hospital   @relation(fields: [hospitalId], references: [id])
-  hospitalId Int
-  testId     Int?       // ← Yeh add karo
-  booking    Booking?
-  createdAt  DateTime   @default(now())
-}
-model Booking {
-  id         Int           @id @default(autoincrement())
-  status     BookingStatus @default(PENDING)
-  totalPrice Float
-  notes      String?
-  user       User          @relation(fields: [userId], references: [id])
-  userId     Int
-  hospital   Hospital      @relation(fields: [hospitalId], references: [id])
-  hospitalId Int
-  test       Test          @relation(fields: [testId], references: [id])
-  testId     Int
-  slot       Slot          @relation(fields: [slotId], references: [id])
-  slotId     Int           @unique
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
-  report    Report?
+  isBooked   Boolean  @default(false)
+  createdAt  DateTime @default(now())
 }
 
-enum BookingStatus {
-  PENDING
-  CONFIRMED
-  CANCELLED
-  COMPLETED
+model Booking {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hospitalId      Int
+  hospital        Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  testId          Int?
+  status          String   @default("pending")
+  appointmentDate DateTime
+  slot            String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  reports         Report[]
+}
+
+model Report {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hospitalId Int
+  hospital  Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  bookingId Int
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  reportUrl String?
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
 }
 
 model Review {
-  id         Int      @id @default(autoincrement())
-  rating     Int
-  comment    String?
-  user       User     @relation(fields: [userId], references: [id])
-  userId     Int
-  hospital   Hospital @relation(fields: [hospitalId], references: [id])
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   hospitalId Int
-  createdAt  DateTime @default(now())
-}
-model Report {
-  id                    Int       @id @default(autoincrement())
-  reportId              String    @unique @default(cuid())
-  bookingId             Int       @unique
-  booking               Booking   @relation(fields: [bookingId], references: [id])
-  userId                Int
-  user                  User      @relation(fields: [userId], references: [id])
-  hospitalId            Int
-  hospital              Hospital  @relation(fields: [hospitalId], references: [id])
-  testId                Int
-  test                  Test      @relation(fields: [testId], references: [id])
-  status                String    @default("PENDING")
-  sampleType            String    @default("Blood")
-  sampleCollectedAt     DateTime?
-  sampleReceivedAt      DateTime?
-  reportGeneratedAt     DateTime?
-  results               ReportResult[]
-  healthScore           Int?
-  riskLevel             String?
-  doctorName            String?
-  technicianName        String?
-  notes                 String?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  hospital  Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
 }
 
-model ReportResult {
-  id              Int     @id @default(autoincrement())
-  reportId        Int
-  report          Report  @relation(fields: [reportId], references: [id])
-  parameterName   String
-  value           String
-  unit            String?
-  referenceRange  String?
-  status          String  @default("NORMAL")
-  previousValue   String?
-  trend           String?
-  createdAt       DateTime @default(now())
+model AIConversation {
+  id        Int     @id @default(autoincrement())
+  userId    Int
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String
+  message   String  @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }

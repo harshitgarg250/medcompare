@@ -1,13 +1,23 @@
-const { PrismaClient } = require('@prisma/client')
-const { PrismaPg } = require('@prisma/adapter-pg')
-const { Pool } = require('pg')
+const { PrismaClient } = require("@prisma/client");
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-})
+const prisma = new PrismaClient({
+  log:
+    process.env.NODE_ENV === "development"
+      ? ["query", "info", "warn", "error"]
+      : ["error"],
+});
 
-const adapter = new PrismaPg(pool)
-const prisma = new PrismaClient({ adapter })
+async function connectDB() {
+  try {
+    await prisma.$connect();
+    console.log("✅ Prisma connected successfully");
+  } catch (error) {
+    console.error("❌ Prisma connection failed:", error);
+    process.exit(1);
+  }
+}
 
-module.exports = prisma
+module.exports = {
+  prisma,
+  connectDB,
+};

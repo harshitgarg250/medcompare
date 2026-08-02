@@ -46,6 +46,9 @@ function Navbar() {
               <Link to="/reports" className={navLinkClass("/reports")}>
                 📋 Reports
               </Link>
+              <Link to="/ai" className="hover:text-teal-600">
+                🤖 AI Assistant
+              </Link>
               <Link to="/compare" className={navLinkClass("/compare")}>
                 Compare
               </Link>

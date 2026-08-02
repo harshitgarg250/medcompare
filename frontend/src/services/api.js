@@ -15,3 +15,7 @@ API.interceptors.request.use((config) => {
 })
 
 export default API
+// AI API
+
+export const askAIWithContext = (question, hospitalId) => 
+  API.post('/ai/ask', { question, hospitalId });

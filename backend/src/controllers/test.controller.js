@@ -1,103 +1,112 @@
-const prisma = require('../config/prisma')
+const { prisma } = require("../config/prisma");
 
-// Sabhi tests get karo
+// GET /api/tests
 const getAllTests = async (req, res) => {
   try {
     const tests = await prisma.test.findMany({
       include: {
         prices: {
           include: {
-            hospital: true
-          }
-        }
-      }
-    })
-    res.status(200).json(tests)
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message })
-  }
-}
+            hospital: true,
+          },
+        },
+      },
+    });
 
-// Test compare karo — ek test ki sabhi hospitals mein price
+    res.json(tests);
+  } catch (error) {
+    console.error("GET TESTS ERROR:", error);
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+// GET /api/tests/compare/:testId
 const compareTest = async (req, res) => {
   try {
-    const { testId } = req.params
+    const id = Number(req.params.testId);
 
     const test = await prisma.test.findUnique({
-      where: { id: parseInt(testId) },
+      where: { id },
       include: {
         prices: {
-          include: {
-            hospital: {
-              select: {
-                id: true,
-                name: true,
-                city: true,
-                rating: true,
-                isOpen: true
-              }
-            }
+          orderBy: {
+            price: "asc",
           },
-          orderBy: { price: 'asc' }
-        }
-      }
-    })
+          include: {
+            hospital: true,
+          },
+        },
+      },
+    });
 
     if (!test) {
-      return res.status(404).json({ message: 'Test not found' })
+      return res.status(404).json({
+        message: "Test not found",
+      });
     }
 
-    res.status(200).json(test)
+    res.json(test);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message })
-  }
-}
+    console.error(error);
 
-// Test banao
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+// POST /api/tests
 const createTest = async (req, res) => {
   try {
-    const { name, description, category } = req.body
+    const { name, description } = req.body;
 
     const test = await prisma.test.create({
-      data: { name, description, category }
-    })
+      data: {
+        name,
+        description,
+      },
+    });
 
-    res.status(201).json({
-      message: 'Test created successfully',
-      test
-    })
+    res.status(201).json(test);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message })
-  }
-}
+    console.error(error);
 
-// Hospital mein test ki price add karo
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+// POST /api/tests/price
 const addTestPrice = async (req, res) => {
   try {
-    const { hospitalId, testId, price, duration, reportTime } = req.body
+    const { hospitalId, testId, price, testName } = req.body;
 
-    const testPrice = await prisma.testPrice.create({
+    const result = await prisma.testPrice.create({
       data: {
-        hospitalId: parseInt(hospitalId),
-        testId: parseInt(testId),
-        price: parseFloat(price),
-        duration,
-        reportTime
-      }
-    })
+        hospitalId: Number(hospitalId),
+        testId: Number(testId),
+        price: Number(price),
+        testName,
+      },
+    });
 
-    res.status(201).json({
-      message: 'Test price added successfully',
-      testPrice
-    })
+    res.status(201).json(result);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message })
+    console.error(error);
+
+    res.status(500).json({
+      message: error.message,
+    });
   }
-}
+};
 
 module.exports = {
   getAllTests,
   compareTest,
   createTest,
-  addTestPrice
-}
+  addTestPrice,
+};
