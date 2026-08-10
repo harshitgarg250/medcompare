@@ -1,8 +1,8 @@
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const { prisma } = require('../config/prisma')
 const nodemailer = require('nodemailer')
 const { OAuth2Client } = require('google-auth-library')
-const { prisma } = require('../config/prisma')
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || 'dummy-client-id')
 const JWT_SECRET = process.env.JWT_SECRET || 'medcompare_super_secret_key_2024'
@@ -148,7 +148,7 @@ const login = async (req, res) => {
 const getMe = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
-      where: { id: req.userd.id },
+      where: { id: req.user.id },
       select: {
         id: true,
         name: true,
