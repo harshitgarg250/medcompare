@@ -1,26 +1,39 @@
-const prisma = require('../config/prisma')
+
+const { prisma } = require('../config/prisma')
 const { sendBookingConfirmation } = require('../utils/email')
 
 // Booking banao
 const createBooking = async (req, res) => {
   try {
     const { hospitalId, testId, slotId, totalPrice, notes } = req.body
-    const userId = req.userId
+    const userId = req.user.id
 
-    console.log('Creating booking:', { hospitalId, testId, slotId, totalPrice, userId })
+    console.log('Creating booking:', {
+      hospitalId,
+      testId,
+      slotId,
+      totalPrice,
+      userId
+    })
 
     const slot = await prisma.slot.findUnique({
-      where: { id: parseInt(slotId) }
+      where: {
+        id: parseInt(slotId)
+      }
     })
 
     console.log('Found slot:', slot)
 
     if (!slot) {
-      return res.status(404).json({ message: 'Slot not found' })
+      return res.status(404).json({
+        message: 'Slot not found'
+      })
     }
 
     if (slot.isBooked) {
-      return res.status(400).json({ message: 'Slot already booked' })
+      return res.status(400).json({
+        message: 'Slot already booked'
+      })
     }
 
     const booking = await prisma.booking.create({
@@ -30,9 +43,13 @@ const createBooking = async (req, res) => {
         testId: parseInt(testId),
         slotId: parseInt(slotId),
         totalPrice: parseFloat(totalPrice),
-        notes,
-        status: 'CONFIRMED'
+        notes: notes || '',
+        status: 'CONFIRMED',
+
+        // Slot ki date ko appointment date ke roop mein save karo
+        appointmentDate: slot.date
       },
+
       include: {
         user: true,
         hospital: true,
@@ -41,8 +58,13 @@ const createBooking = async (req, res) => {
     })
 
     await prisma.slot.update({
-      where: { id: parseInt(slotId) },
-      data: { isBooked: true }
+      where: {
+        id: parseInt(slotId)
+      },
+
+      data: {
+        isBooked: true
+      }
     })
 
     // Email send karo
@@ -52,9 +74,15 @@ const createBooking = async (req, res) => {
         name: booking.user?.name || 'User',
         hospitalName: booking.hospital?.name || 'Hospital',
         testName: booking.test?.name || 'Test',
+
         date: slot?.date
-          ? new Date(slot.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+          ? new Date(slot.date).toLocaleDateString('en-IN', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric'
+            })
           : 'N/A',
+
         time: slot?.time || 'N/A',
         price: booking.totalPrice,
         bookingId: booking.id
@@ -69,57 +97,104 @@ const createBooking = async (req, res) => {
     })
   } catch (error) {
     console.log('Booking error:', error.message)
-    res.status(500).json({ message: 'Server error', error: error.message })
+
+    res.status(500).json({
+      message: 'Server error',
+      error: error.message
+    })
   }
 }
+
 
 // User ki saari bookings
 const getUserBookings = async (req, res) => {
   try {
-    const userId = req.userId
+    const userId = req.user.id
 
     const bookings = await prisma.booking.findMany({
-      where: { userId },
-      include: {
-        hospital: { select: { name: true, address: true } },
-        test: { select: { name: true } },
-        slot: { select: { date: true, time: true } }
+      where: {
+        userId
       },
-      orderBy: { createdAt: 'desc' }
+
+      include: {
+        hospital: {
+          select: {
+            name: true,
+            address: true
+          }
+        },
+
+        test: {
+          select: {
+            name: true
+          }
+        },
+
+        slot: {
+          select: {
+            date: true,
+            time: true
+          }
+        }
+      },
+
+      orderBy: {
+        createdAt: 'desc'
+      }
     })
 
     res.status(200).json(bookings)
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message })
+    res.status(500).json({
+      message: 'Server error',
+      error: error.message
+    })
   }
 }
+
 
 // Booking cancel karo
 const cancelBooking = async (req, res) => {
   try {
     const { id } = req.params
-    const userId = req.userId
+    const userId = req.user.id
 
     const booking = await prisma.booking.findUnique({
-      where: { id: parseInt(id) }
+      where: {
+        id: parseInt(id)
+      }
     })
 
     if (!booking) {
-      return res.status(404).json({ message: 'Booking not found' })
+      return res.status(404).json({
+        message: 'Booking not found'
+      })
     }
 
     if (booking.userId !== userId) {
-      return res.status(403).json({ message: 'Not authorized' })
+      return res.status(403).json({
+        message: 'Not authorized'
+      })
     }
 
     const updated = await prisma.booking.update({
-      where: { id: parseInt(id) },
-      data: { status: 'CANCELLED' }
+      where: {
+        id: parseInt(id)
+      },
+
+      data: {
+        status: 'CANCELLED'
+      }
     })
 
     await prisma.slot.update({
-      where: { id: booking.slotId },
-      data: { isBooked: false }
+      where: {
+        id: booking.slotId
+      },
+
+      data: {
+        isBooked: false
+      }
     })
 
     res.status(200).json({
@@ -127,8 +202,17 @@ const cancelBooking = async (req, res) => {
       booking: updated
     })
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message })
+    res.status(500).json({
+      message: 'Server error',
+      error: error.message
+    })
   }
 }
 
-module.exports = { createBooking, getUserBookings, cancelBooking }
+
+module.exports = {
+  createBooking,
+  getUserBookings,
+  cancelBooking
+}
+

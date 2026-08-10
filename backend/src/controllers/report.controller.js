@@ -1,4 +1,4 @@
-const prisma = require('../config/prisma')
+const { prisma } = require('../config/prisma')
 
 // Report create karo (admin/lab)
 const createReport = async (req, res) => {
@@ -183,15 +183,18 @@ const getDefaultResults = (testName) => {
 const getMyReports = async (req, res) => {
   try {
     const reports = await prisma.report.findMany({
-      where: { userId: req.userId },
-      include: {
-        results: true,
-        test: true,
+    where: {
+        userId: req.user.id
+    },
+    include: {
+        booking: true,
         hospital: true,
-        booking: true
-      },
-      orderBy: { createdAt: 'desc' }
-    })
+        user: true
+    },
+    orderBy: {
+        createdAt: "desc"
+    }
+})
     res.status(200).json(reports)
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message })

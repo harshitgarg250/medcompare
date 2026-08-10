@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const nodemailer = require('nodemailer')
 const { OAuth2Client } = require('google-auth-library')
-const prisma = require('../config/prisma')
+const { prisma } = require('../config/prisma')
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || 'dummy-client-id')
 const JWT_SECRET = process.env.JWT_SECRET || 'medcompare_super_secret_key_2024'
@@ -148,7 +148,7 @@ const login = async (req, res) => {
 const getMe = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
-      where: { id: req.userId },
+      where: { id: req.userd.id },
       select: {
         id: true,
         name: true,
@@ -315,7 +315,7 @@ const googleAuth = async (req, res) => {
 const updateProfile = async (req, res) => {
   try {
     const { name, phone } = req.body
-    const userId = req.userId
+    const userId = req.user.id
 
     if (name === undefined && phone === undefined) {
       return res.status(400).json({ message: 'No profile fields provided' })

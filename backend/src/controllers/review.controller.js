@@ -1,9 +1,9 @@
-const prisma = require('../config/prisma')
+const {prisma} = require('../config/prisma')
 
 const createReview = async (req, res) => {
   try {
     const { hospitalId, rating, comment } = req.body
-    const userId = req.userId
+    const userId = req.user.id
 
     // Check karo user ne is hospital mein booking ki hai
     const booking = await prisma.booking.findFirst({

@@ -1,4 +1,4 @@
-const prisma = require('../config/prisma')
+const {prisma} = require('../config/prisma')
 
 // Sabhi hospitals get karo
 const getAllHospitals = async (req, res) => {
