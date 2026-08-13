@@ -66,6 +66,8 @@ model TestPrice {
   hospital   Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
   price      Float
   testName   String?
+  duration   String?
+  reportTime String?
 
   @@unique([testId, hospitalId])
 }
